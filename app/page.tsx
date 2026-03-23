@@ -53,6 +53,10 @@ export default function Home() {
     stopSequences: [],
     safetySettings: 'medium'
   })
+  
+  // New Feature State
+  const [isSearchEnabled, setIsSearchEnabled] = useState(false)
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([])
 
   const { keys } = useKeysManager()
   const {
@@ -134,7 +138,9 @@ export default function Home() {
       topP: modelSettings.topP,
       topK: modelSettings.topK,
       maxTokens: modelSettings.maxTokens,
-      customCredentials: keys
+      customCredentials: keys,
+      isSearchEnabled,
+      attachedFiles
     })
   }
   
@@ -209,12 +215,15 @@ export default function Home() {
                     onRegenerateWithNewPrompt={handleGenerate}
                     thinkingOutput={thinkingOutput}
                     isThinking={isThinking}
+                    isSearchEnabled={isSearchEnabled}
+                    setIsSearchEnabled={setIsSearchEnabled}
+                    attachedFiles={attachedFiles}
+                    setAttachedFiles={setAttachedFiles}
                   />
                 </div>
               </div>
             )}
 
-            {activeTab === 'keys' && <KeysManager />}
             
             {activeTab === 'prompts' && (
               <div className="flex items-center justify-center h-full text-slate-500">

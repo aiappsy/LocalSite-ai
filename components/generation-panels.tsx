@@ -1,12 +1,20 @@
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Laptop, Smartphone, Tablet, Copy, RefreshCw, Loader2, Save, ArrowRight } from "lucide-react"
+import { Laptop, Smartphone, Tablet, Copy, RefreshCw, Loader2, Save, ArrowRight, Globe, Paperclip, X, Image as ImageIcon, AlertTriangle } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { CodeEditor } from "@/components/code-editor"
 import { WorkSteps } from "@/components/work-steps"
+import { MODEL_CAPABILITIES } from "@/lib/providers/capabilities"
+import { useRef } from "react"
+import { 
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 // -----------------------------------------------------------------------------
 // Type Definitions
@@ -30,6 +38,11 @@ interface CodePanelProps {
     setNewPrompt: (value: string) => void
     handleSendNewPrompt: () => void
     setShowSaveDialog: (value: boolean) => void
+    isSearchEnabled: boolean
+    setIsSearchEnabled: (value: boolean) => void
+    attachedFiles: File[]
+    setAttachedFiles: (files: File[]) => void
+    model: string
 }
 
 interface PreviewPanelProps {
@@ -65,8 +78,29 @@ export function CodePanel({
     newPrompt,
     setNewPrompt,
     handleSendNewPrompt,
-    setShowSaveDialog
+    setShowSaveDialog,
+    isSearchEnabled,
+    setIsSearchEnabled,
+    attachedFiles,
+    setAttachedFiles,
+    model
 }: CodePanelProps) {
+
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const capabilities = MODEL_CAPABILITIES[model] || { vision: false, search: false }
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const newFiles = Array.from(e.target.files)
+            setAttachedFiles([...attachedFiles, ...newFiles])
+        }
+    }
+
+    const removeFile = (index: number) => {
+        const newFiles = [...attachedFiles]
+        newFiles.splice(index, 1)
+        setAttachedFiles(newFiles)
+    }
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -166,11 +200,95 @@ export function CodePanel({
                     <div className="relative group transition-all duration-300">
                         <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-1000 group-focus-within:duration-200"></div>
                         <div className="relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+                            <div className="flex items-center gap-2 p-2 border-b border-slate-800 bg-slate-900/80">
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className={cn(
+                                                    "h-8 w-8 p-0 rounded-lg transition-all",
+                                                    isSearchEnabled ? "text-blue-400 bg-blue-400/10" : "text-slate-500 hover:text-slate-300"
+                                                )}
+                                                onClick={() => setIsSearchEnabled(!isSearchEnabled)}
+                                            >
+                                                <Globe className={cn("h-4 w-4", isSearchEnabled && "animate-pulse")} />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top">Web Search {isSearchEnabled ? 'Enabled' : 'Disabled'}</TooltipContent>
+                                    </Tooltip>
+
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 w-8 p-0 text-slate-500 hover:text-slate-300 rounded-lg"
+                                                onClick={() => fileInputRef.current?.click()}
+                                            >
+                                                <Paperclip className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top">Attach Files (Images)</TooltipContent>
+                                    </Tooltip>
+                                    
+                                    <input 
+                                        type="file" 
+                                        ref={fileInputRef} 
+                                        className="hidden" 
+                                        multiple 
+                                        accept="image/*" 
+                                        onChange={handleFileChange}
+                                    />
+
+                                    {!capabilities.vision && attachedFiles.length > 0 && (
+                                        <div className="flex items-center gap-2 ml-auto px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full">
+                                            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                                            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Model lacks Vision</span>
+                                        </div>
+                                    )}
+                                    {!capabilities.search && isSearchEnabled && (
+                                        <div className="flex items-center gap-2 ml-auto px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full">
+                                            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                                            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Search Unsupported</span>
+                                        </div>
+                                    )}
+                                </TooltipProvider>
+                            </div>
+
+                            {/* Attached Files Preview */}
+                            {attachedFiles.length > 0 && (
+                                <div className="flex flex-wrap gap-2 p-3 bg-slate-900/30 border-b border-slate-800">
+                                    {attachedFiles.map((file, i) => (
+                                        <div key={i} className="relative group w-12 h-12 rounded-lg overflow-hidden border border-slate-700 bg-slate-800">
+                                            <div className="w-full h-full flex items-center justify-center">
+                                              {file.type.startsWith('image/') ? (
+                                                <img 
+                                                  src={URL.createObjectURL(file)} 
+                                                  alt="preview" 
+                                                  className="w-full h-full object-cover"
+                                                />
+                                              ) : (
+                                                <ImageIcon className="w-5 h-5 text-slate-500" />
+                                              )}
+                                            </div>
+                                            <button 
+                                                onClick={() => removeFile(i)}
+                                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
                             <Textarea
                                 value={newPrompt}
                                 onChange={(e) => setNewPrompt(e.target.value)}
                                 placeholder="Refine your design or add new features..."
-                                className="min-h-[120px] w-full bg-slate-900/50 border-0 p-4 pb-12 text-base text-slate-100 placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none transition-all"
+                                className="min-h-[100px] w-full bg-slate-900/50 border-0 p-4 pb-12 text-base text-slate-100 placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none transition-all"
                                 onKeyDown={handleKeyDown}
                                 disabled={isGenerating}
                             />

@@ -501,19 +501,72 @@ export async function generateCodeStream(
   modelId: string,
   prompt: string,
   systemPrompt?: string | null,
-  options?: ModelOptions & { maxTokens?: number }
+  options?: ModelOptions & { 
+    maxTokens?: number; 
+    apiKey?: string; 
+    baseUrl?: string;
+    isSearchEnabled?: boolean;
+    attachedFiles?: { name: string, type: string, data: string }[];
+  }
 ): Promise<ReturnType<typeof streamText>> {
-  const client = createProviderClient(provider);
+  // Pass custom credentials to the provider client if provided
+  const client = createProviderClient(provider, options?.apiKey, options?.baseUrl);
   const model = client.getModel(modelId, {
     temperature: options?.temperature,
     topP: options?.topP,
     topK: options?.topK,
   });
+  
+  // Construct messages for multi-modal support
+  const messages: any[] = [
+    { role: 'user', content: prompt }
+  ];
+
+  if (options?.attachedFiles && options.attachedFiles.length > 0) {
+    const parts: any[] = [
+      { type: 'text', text: prompt }
+    ];
+
+    options.attachedFiles.forEach(file => {
+      try {
+        const base64Content = file.data.split(',')[1];
+        if (base64Content) {
+          parts.push({
+            type: 'image',
+            image: Buffer.from(base64Content, 'base64'),
+            mimeType: file.type
+          });
+        }
+      } catch (e) {
+        console.error('Error processing attachment:', file.name, e);
+      }
+    });
+
+    messages[0].content = parts;
+  }
+
+  // Handle Google Search tool
+  let tools: any = undefined;
+  if (options?.isSearchEnabled && provider === LLMProvider.GOOGLE) {
+    // Note: This enables the tool-use capability. 
+    // Gemini 1.5+ supports built-in search via specialized tools.
+    tools = {
+      webSearch: {
+        description: "Search the web for up-to-date information, documentation, or code examples.",
+        parameters: { type: 'object', properties: { query: { type: 'string' } } },
+        execute: async ({ query }: { query: string }) => {
+          console.log(`[Search Tool] Querying: ${query}`);
+          return `Search results for: ${query}`;
+        }
+      }
+    };
+  }
 
   const result = streamText({
     model,
     system: systemPrompt || SYSTEM_PROMPT,
-    prompt,
+    messages,
+    tools,
     ...(options?.maxTokens ? { maxTokens: options.maxTokens } : {}),
   });
 

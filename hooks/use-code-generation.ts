@@ -12,6 +12,8 @@ interface GenerateCodeParams {
     systemPromptType: string // 'default', 'thinking', 'custom'
     customSystemPrompt?: string
     customCredentials?: Record<string, { apiKey?: string; baseUrl?: string }>
+    isSearchEnabled?: boolean
+    attachedFiles?: File[]
 }
 
 // Interface for NDJSON stream parts
@@ -37,7 +39,9 @@ export function useCodeGeneration() {
         topK,
         systemPromptType,
         customSystemPrompt,
-        customCredentials
+        customCredentials,
+        isSearchEnabled,
+        attachedFiles
     }: GenerateCodeParams) => {
         if (!prompt.trim() || !model || !provider) {
             toast.error("Please enter a prompt and select a provider and model.")
@@ -49,6 +53,24 @@ export function useCodeGeneration() {
         setThinkingOutput("")
         setIsThinking(false)
         setGenerationComplete(false)
+        
+        // Process files to Base64 if any
+        let processedFiles: { name: string, type: string, data: string }[] = []
+        if (attachedFiles && attachedFiles.length > 0) {
+            processedFiles = await Promise.all(attachedFiles.map(async (file) => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader()
+                    reader.onloadend = () => {
+                        resolve({
+                            name: file.name,
+                            type: file.type,
+                            data: reader.result as string
+                        })
+                    }
+                    reader.readAsDataURL(file)
+                })
+            })) as any
+        }
 
         try {
             // Construct the system prompt logic here or in the API route.
@@ -74,6 +96,8 @@ export function useCodeGeneration() {
                     systemPromptType,
                     customSystemPrompt: finalCustomSystemPrompt,
                     customCredentials,
+                    isSearchEnabled,
+                    attachedFiles: processedFiles
                 }),
             })
 

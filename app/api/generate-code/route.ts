@@ -16,7 +16,9 @@ export async function POST(request: NextRequest) {
       temperature,
       topP,
       topK,
-      customCredentials 
+      customCredentials,
+      isSearchEnabled,
+      attachedFiles
     } = await request.json();
 
     // Check if prompt and model are provided
@@ -66,6 +68,8 @@ export async function POST(request: NextRequest) {
         temperature: parsedTemperature,
         topP: parsedTopP,
         topK: parsedTopK,
+        isSearchEnabled,
+        attachedFiles,
         // We'll pass custom credentials if they exist for this provider
         ...(customCredentials?.[provider] || {})
       }

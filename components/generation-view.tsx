@@ -33,6 +33,10 @@ interface GenerationViewProps {
   onRegenerateWithNewPrompt: (newPrompt: string) => void
   thinkingOutput?: string
   isThinking?: boolean
+  isSearchEnabled: boolean
+  setIsSearchEnabled: (value: boolean) => void
+  attachedFiles: File[]
+  setAttachedFiles: (files: File[]) => void
 }
 
 export function GenerationView({
@@ -45,7 +49,11 @@ export function GenerationView({
   generationComplete,
   onRegenerateWithNewPrompt,
   thinkingOutput = "",
-  isThinking = false
+  isThinking = false,
+  isSearchEnabled,
+  setIsSearchEnabled,
+  attachedFiles,
+  setAttachedFiles
 }: GenerationViewProps) {
   const [viewportSize, setViewportSize] = useState<"desktop" | "tablet" | "mobile">("desktop")
   const [copySuccess, setCopySuccess] = useState(false)
@@ -198,7 +206,12 @@ export function GenerationView({
     newPrompt,
     setNewPrompt,
     handleSendNewPrompt,
-    setShowSaveDialog
+    setShowSaveDialog,
+    isSearchEnabled,
+    setIsSearchEnabled,
+    attachedFiles,
+    setAttachedFiles,
+    model
   }
 
   const previewPanelProps = {

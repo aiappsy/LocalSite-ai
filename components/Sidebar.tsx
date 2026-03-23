@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export type SidebarTab = 'chat' | 'prompts' | 'keys' | 'home';
+export type SidebarTab = 'chat' | 'prompts' | 'home';
 
 interface SidebarProps {
   activeTab: SidebarTab;
@@ -38,7 +38,6 @@ const NAV_ITEMS = [
   { id: 'home', icon: Home, label: 'Home' },
   { id: 'chat', icon: MessageSquare, label: 'Chat' },
   { id: 'prompts', icon: Terminal, label: 'Prompts' },
-  { id: 'keys', icon: Key, label: 'API Keys' },
 ] as const;
 
 export function Sidebar({ 
