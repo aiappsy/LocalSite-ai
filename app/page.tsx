@@ -16,6 +16,7 @@ import { GenerationView } from "@/components/generation-view"
 import { LoadingScreen } from "@/components/loading-screen"
 import { useCodeGeneration } from "@/hooks/use-code-generation"
 import { LLMProvider, getAvailableProviders } from "@/lib/providers/config"
+import { HelpManual } from "@/components/HelpManual"
 
 export default function Home() {
   // UI State
@@ -23,6 +24,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<SidebarTab>('home')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false)
+  const [isHelpManualOpen, setIsHelpManualOpen] = useState(false)
   
   // Model & Provider State
   const [selectedProvider, setSelectedProvider] = useState<LLMProvider>(LLMProvider.DEEPSEEK)
@@ -61,6 +63,10 @@ export default function Home() {
 
   // Fetch models whenever provider changes
   useEffect(() => {
+    // Clear current models immediately when switching providers to prevent stale UI
+    setAvailableModels([])
+    setSelectedModel("")
+    
     const fetchModels = async () => {
       setIsLoadingModels(true)
       try {
@@ -68,16 +74,23 @@ export default function Home() {
         const customBaseUrl = keys[selectedProvider]?.baseUrl
 
         const response = await fetch(`/api/get-models`, {
-          method: 'POST', // Some providers might need POST for keys if we pass them
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ provider: selectedProvider, customApiKey, customBaseUrl })
         })
         
         if (!response.ok) throw new Error("Failed to fetch models")
         const data = await response.json()
-        setAvailableModels(data.models || [])
-        if (data.models?.length > 0 && !data.models.find((m: any) => m.id === selectedModel)) {
-          setSelectedModel(data.models[0].id)
+        
+        const models = data.models || []
+        setAvailableModels(models)
+        
+        // If the fetch returned models, select the first one if the current selection is invalid
+        if (models.length > 0) {
+          const currentValid = models.find((m: any) => m.id === selectedModel)
+          if (!currentValid) {
+            setSelectedModel(models[0].id)
+          }
         }
       } catch (error) {
         console.error("Error fetching models:", error)
@@ -121,6 +134,9 @@ export default function Home() {
     <div className="flex h-screen w-full bg-slate-950 overflow-hidden text-slate-200">
       <Toaster position="top-right" theme="dark" />
       
+      {/* Help Manual Modal */}
+      <HelpManual isOpen={isHelpManualOpen} onClose={() => setIsHelpManualOpen(false)} />
+      
       <ResizablePanelGroup direction="horizontal">
         {/* Left Sidebar */}
         <ResizablePanel 
@@ -137,6 +153,7 @@ export default function Home() {
             onTabChange={setActiveTab}
             isCollapsed={isSidebarCollapsed}
             setIsCollapsed={setIsSidebarCollapsed}
+            onOpenHelp={() => setIsHelpManualOpen(true)}
           />
         </ResizablePanel>
 
@@ -149,16 +166,7 @@ export default function Home() {
               <WelcomeView 
                 prompt={prompt}
                 setPrompt={setPrompt}
-                selectedModel={selectedModel}
-                setSelectedModel={setSelectedModel}
-                selectedProvider={selectedProvider}
-                setSelectedProvider={setSelectedProvider}
                 onGenerate={() => handleGenerate()}
-                // Pass dummy values for unused props in new layout
-                selectedSystemPrompt="default"
-                setSelectedSystemPrompt={() => {}}
-                customSystemPrompt=""
-                setCustomSystemPrompt={() => {}}
               />
             )}
 

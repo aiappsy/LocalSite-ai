@@ -18,16 +18,6 @@ interface Model {
 interface WelcomeViewProps {
   prompt: string
   setPrompt: (value: string) => void
-  selectedModel: string
-  setSelectedModel: (value: string) => void
-  selectedProvider: string
-  setSelectedProvider: (value: string) => void
-  selectedSystemPrompt: string
-  setSelectedSystemPrompt: (value: string) => void
-  customSystemPrompt: string
-  setCustomSystemPrompt: (value: string) => void
-  maxTokens: number | undefined
-  setMaxTokens: (value: number | undefined) => void
   onGenerate: () => void
 }
 

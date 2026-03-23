@@ -131,21 +131,21 @@ export function SettingsPanel({
         <div className="space-y-6">
           {/* Temperature */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
-                Temperature
-                <TooltipProvider>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-slate-400">Temperature</span>
+                <TooltipProvider delayDuration={300}>
                   <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="w-3 h-3 text-slate-500" />
+                    <TooltipTrigger asChild>
+                      <Info className="w-3 h-3 text-slate-500 cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent className="max-w-[200px] text-xs">
-                      Controls randomness. Lower values are more deterministic, higher values are more creative.
+                    <TooltipContent side="left" className="max-w-[200px] text-xs">
+                      Controls randomness: Lower values are more deterministic, higher values are more creative.
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              </Label>
-              <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded font-mono text-blue-400">
+              </div>
+              <span className="text-[10px] font-mono text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded">
                 {settings.temperature.toFixed(2)}
               </span>
             </div>
@@ -161,21 +161,21 @@ export function SettingsPanel({
 
           {/* Top P */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
-                Top P
-                <TooltipProvider>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-slate-400">Top P</span>
+                <TooltipProvider delayDuration={300}>
                   <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="w-3 h-3 text-slate-500" />
+                    <TooltipTrigger asChild>
+                      <Info className="w-3 h-3 text-slate-500 cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent className="max-w-[200px] text-xs">
+                    <TooltipContent side="left" className="max-w-[200px] text-xs">
                       Nucleus sampling: limits the model to a subset of tokens whose cumulative probability exceeds P.
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              </Label>
-              <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded font-mono text-blue-400">
+              </div>
+              <span className="text-[10px] font-mono text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded">
                 {settings.topP.toFixed(2)}
               </span>
             </div>
@@ -191,21 +191,21 @@ export function SettingsPanel({
 
           {/* Max Tokens */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
-                Output Length
-                <TooltipProvider>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-slate-400">Output Length</span>
+                <TooltipProvider delayDuration={300}>
                   <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="w-3 h-3 text-slate-500" />
+                    <TooltipTrigger asChild>
+                      <Info className="w-3 h-3 text-slate-500 cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent className="max-w-[200px] text-xs">
+                    <TooltipContent side="left" className="max-w-[200px] text-xs">
                       Maximum number of tokens the model can generate in a single response.
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              </Label>
-              <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded font-mono text-blue-400">
+              </div>
+              <span className="text-[10px] font-mono text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded">
                 {settings.maxTokens}
               </span>
             </div>
