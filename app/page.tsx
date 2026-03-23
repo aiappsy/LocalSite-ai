@@ -36,6 +36,7 @@ export default function Home() {
   const { user, loading: authLoading } = useAuth()
   
   // UI State
+  const [guestMode, setGuestMode] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<SidebarTab>('home')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -226,7 +227,7 @@ export default function Home() {
   }
 
   if (isLoading || authLoading) return <LoadingScreen />
-  if (!user) return <LoginPanel />
+  // if (!user && !guestMode) return <LoginPanel onSkip={() => setGuestMode(true)} />
 
   return (
     <div className="flex h-screen w-full bg-slate-950 overflow-hidden text-slate-200">
@@ -342,7 +343,7 @@ export default function Home() {
 
       {/* Version Footer */}
       <div className="fixed bottom-4 right-4 text-[10px] text-slate-500 font-mono pointer-events-none opacity-50">
-        v1.0.7-stable | AIAppsy Secure Auth
+        v1.0.8-stable | Guest Mode Active
       </div>
     </div>
   )

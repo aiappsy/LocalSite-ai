@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/button';
 import { LogIn, Sparkles, ShieldCheck, Zap } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export const LoginPanel: React.FC = () => {
+interface LoginPanelProps {
+  onSkip?: () => void;
+}
+
+export const LoginPanel: React.FC<LoginPanelProps> = ({ onSkip }) => {
   const { loginWithGoogle, loading } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
 
@@ -87,6 +91,17 @@ export const LoginPanel: React.FC = () => {
               </>
             )}
           </Button>
+
+          {onSkip && (
+            <div className="pt-2 text-center">
+              <button 
+                onClick={onSkip}
+                className="text-slate-500 hover:text-slate-300 text-[10px] font-medium transition-colors duration-200 underline underline-offset-4"
+              >
+                Skip for now (Guest Mode)
+              </button>
+            </div>
+          )}
 
           <p className="text-[10px] text-center text-slate-600 px-8">
             By signing in, you agree to our Terms of Service and Privacy Policy. All your data is stored securely in your private cloud workspace.
