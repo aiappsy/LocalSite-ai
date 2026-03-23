@@ -59,10 +59,10 @@ export function DeployDialog({ isOpen, onClose, code }: DeployDialogProps) {
       if (savedUrl) setCoolifyUrl(savedUrl);
       if (savedToken) {
         setCoolifyToken(savedToken);
-        // Auto-validate if both exist
-        if (savedUrl && !projects.length) {
-          validateConnection(savedUrl, savedToken);
-        }
+      // Auto-validate if URL exists (token might be on server)
+      if (savedUrl && !projects.length) {
+        validateConnection(savedUrl, savedToken || "");
+      }
       }
     }
   }, [isOpen]);
@@ -78,8 +78,8 @@ export function DeployDialog({ isOpen, onClose, code }: DeployDialogProps) {
     const url = overrideUrl || coolifyUrl;
     const token = overrideToken || coolifyToken;
 
-    if (!url || !token) {
-      if (!overrideUrl) toast.error("Please provide both Instance URL and API Token.");
+    if (!url) {
+      if (!overrideUrl) toast.error("Please provide an Instance URL.");
       return;
     }
 
@@ -132,7 +132,7 @@ export function DeployDialog({ isOpen, onClose, code }: DeployDialogProps) {
   };
 
   const handleCoolifyDeploy = async () => {
-    if (!coolifyToken) {
+    if (!coolifyToken && projects.length === 0) {
       toast.error("Please connect your Coolify instance first.");
       return;
     }
@@ -247,7 +247,7 @@ export function DeployDialog({ isOpen, onClose, code }: DeployDialogProps) {
                       id="coolify-token" 
                       type="password" 
                       placeholder="Enter token (or leave blank for server secret)..." 
-                      className="bg-slate-900 border-slate-800 h-10 text-xs flex-1"
+                      className="bg-slate-900 border-slate-800 h-10 text-xs flex-1 placeholder:text-slate-600"
                       value={coolifyToken}
                       onChange={(e) => setCoolifyToken(e.target.value)}
                     />
