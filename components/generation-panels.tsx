@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Laptop, Smartphone, Tablet, Copy, RefreshCw, Loader2, Save, ArrowRight, Globe, Paperclip, X, Image as ImageIcon, AlertTriangle } from "lucide-react"
+import { Laptop, Smartphone, Tablet, Copy, RefreshCw, Loader2, Save, ArrowRight, Globe, Paperclip, X, Image as ImageIcon, AlertTriangle, Share2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -43,6 +43,7 @@ interface CodePanelProps {
     attachedFiles: File[]
     setAttachedFiles: (files: File[]) => void
     model: string
+    onDeploy?: () => void
 }
 
 interface PreviewPanelProps {
@@ -55,6 +56,7 @@ interface PreviewPanelProps {
     isGenerating: boolean
     previewKey: number
     previewContent: string
+    onDeploy?: () => void
 }
 
 // -----------------------------------------------------------------------------
@@ -83,7 +85,8 @@ export function CodePanel({
     setIsSearchEnabled,
     attachedFiles,
     setAttachedFiles,
-    model
+    model,
+    onDeploy
 }: CodePanelProps) {
 
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -164,6 +167,16 @@ export function CodePanel({
                             <Copy className="w-4 h-4 mr-1" />
                             {copySuccess ? "Copied!" : "Copy"}
                         </Button>
+                        <Button
+                            variant="default"
+                            size="sm"
+                            className="h-7 px-3 bg-blue-600 hover:bg-blue-500 text-white gap-1.5 shadow-lg shadow-blue-900/20"
+                            onClick={onDeploy}
+                            disabled={!generatedCode || isGenerating}
+                        >
+                            <Share2 className="w-3.5 h-3.5" />
+                            Deploy
+                        </Button>
                     </div>
                 </div>
 
@@ -224,13 +237,14 @@ export function CodePanel({
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-8 w-8 p-0 text-slate-500 hover:text-slate-300 rounded-lg"
+                                                className="px-3 text-slate-500 hover:text-slate-300 rounded-lg gap-2"
                                                 onClick={() => fileInputRef.current?.click()}
                                             >
                                                 <Paperclip className="h-4 w-4" />
+                                                <span className="text-xs font-semibold">Upload Files</span>
                                             </Button>
                                         </TooltipTrigger>
-                                        <TooltipContent side="top">Attach Files (Images)</TooltipContent>
+                                        <TooltipContent side="top">Attach Images for Vision Tasks</TooltipContent>
                                     </Tooltip>
                                     
                                     <input 
@@ -358,7 +372,8 @@ export function PreviewPanel({
     editedCode,
     isGenerating,
     previewKey,
-    previewContent
+    previewContent,
+    onDeploy
 }: PreviewPanelProps) {
 
     // Calculate responsive width for the iframe container
@@ -409,6 +424,17 @@ export function PreviewPanel({
                         onClick={() => setViewportSize("mobile")}
                     >
                         <Smartphone className="w-4 h-4" />
+                    </Button>
+                    <div className="mx-2 w-[1px] h-4 bg-gray-800" />
+                    <Button
+                        variant="default"
+                        size="sm"
+                        className="h-7 px-3 bg-blue-600 hover:bg-blue-500 text-white gap-1.5 shadow-lg shadow-blue-900/20"
+                        onClick={onDeploy}
+                        disabled={!originalCode && !editedCode}
+                    >
+                        <Share2 className="w-3.5 h-3.5" />
+                        Deploy
                     </Button>
                 </div>
             </div>

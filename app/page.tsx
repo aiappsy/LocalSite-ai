@@ -6,17 +6,18 @@ import {
   ResizablePanel, 
   ResizablePanelGroup 
 } from "@/components/ui/resizable"
-import { Toaster, toast } from "sonner"
 import { Sidebar, SidebarTab } from "@/components/Sidebar"
 import { SettingsPanel, ModelSettings } from "@/components/SettingsPanel"
 import { KeysManager, useKeysManager } from "@/components/KeysManager"
-import { SystemInstructions } from "@/components/SystemInstructions"
 import { WelcomeView } from "@/components/welcome-view"
 import { GenerationView } from "@/components/generation-view"
+import { DeployDialog } from "@/components/DeployDialog"
 import { LoadingScreen } from "@/components/loading-screen"
 import { useCodeGeneration } from "@/hooks/use-code-generation"
 import { LLMProvider, getAvailableProviders } from "@/lib/providers/config"
 import { HelpManual } from "@/components/HelpManual"
+import { useAuth } from "@/hooks/use-auth"
+import { LoginPanel } from "@/components/LoginPanel"
 import { 
   Sheet, 
   SheetContent, 
@@ -26,15 +27,21 @@ import {
 } from "@/components/ui/sheet"
 import { PlusCircle, Settings2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { db } from "@/lib/firebase/config"
+import { doc, getDoc, setDoc } from "firebase/firestore"
+import { debounce } from "lodash"
+import { Toaster, toast } from "sonner"
 
 export default function Home() {
+  const { user, loading: authLoading } = useAuth()
+  
   // UI State
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<SidebarTab>('home')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false)
   const [isHelpManualOpen, setIsHelpManualOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isDeployDialogOpen, setIsDeployDialogOpen] = useState(false)
   
   // Model & Provider State
   const [selectedProvider, setSelectedProvider] = useState<LLMProvider>(LLMProvider.DEEPSEEK)
@@ -69,11 +76,47 @@ export default function Home() {
     setGeneratedCode
   } = useCodeGeneration()
 
-  // Initial Loading
+  // 1. Initial Loading & Auth Data Fetch
   useEffect(() => {
+    if (user) {
+      // Sync settings from Firestore
+      const docRef = doc(db, 'users', user.uid, 'settings', 'models');
+      getDoc(docRef).then((docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.modelSettings) setModelSettings(data.modelSettings);
+          if (data.systemPrompt) setSystemPrompt(data.systemPrompt);
+          if (data.selectedProvider) setSelectedProvider(data.selectedProvider);
+        }
+      });
+    }
+    
     const timer = setTimeout(() => setIsLoading(false), 1000)
     return () => clearTimeout(timer)
-  }, [])
+  }, [user])
+
+  // 2. Cloud Persistence (Debounced Sync to Firestore)
+  useEffect(() => {
+    if (!user || isLoading) return;
+
+    const syncToCloud = debounce(async () => {
+      try {
+        const docRef = doc(db, 'users', user.uid, 'settings', 'models');
+        await setDoc(docRef, {
+          modelSettings,
+          systemPrompt,
+          selectedProvider,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+        console.log("Settings synced to cloud");
+      } catch (e) {
+        console.error("Cloud Sync Error:", e);
+      }
+    }, 2000);
+
+    syncToCloud();
+    return () => syncToCloud.cancel();
+  }, [user, modelSettings, systemPrompt, selectedProvider, isLoading]);
 
   // Fetch models whenever provider changes
   useEffect(() => {
@@ -151,7 +194,8 @@ export default function Home() {
     toast.success("Started a new chat")
   }
 
-  if (isLoading) return <LoadingScreen />
+  if (isLoading || authLoading) return <LoadingScreen />
+  if (!user) return <LoginPanel />
 
   return (
     <div className="flex h-screen w-full bg-slate-950 overflow-hidden text-slate-200">
@@ -197,12 +241,6 @@ export default function Home() {
 
             {activeTab === 'chat' && (
               <div className="flex flex-col h-full">
-                <SystemInstructions 
-                  value={systemPrompt}
-                  onChange={setSystemPrompt}
-                  isOpen={isSystemPromptOpen}
-                  onToggle={() => setIsSystemPromptOpen(!isSystemPromptOpen)}
-                />
                 <div className="flex-1 overflow-hidden">
                   <GenerationView 
                     prompt={prompt}
@@ -219,6 +257,7 @@ export default function Home() {
                     setIsSearchEnabled={setIsSearchEnabled}
                     attachedFiles={attachedFiles}
                     setAttachedFiles={setAttachedFiles}
+                    onDeploy={() => setIsDeployDialogOpen(true)}
                   />
                 </div>
               </div>
@@ -255,11 +294,20 @@ export default function Home() {
               onProviderChange={setSelectedProvider}
               onModelChange={setSelectedModel}
               onSettingsChange={(newSettings) => setModelSettings(prev => ({ ...prev, ...newSettings }))}
+              systemPrompt={systemPrompt}
+              onSystemPromptChange={setSystemPrompt}
               isLoadingModels={isLoadingModels}
             />
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Deploy Dialog */}
+      <DeployDialog 
+        isOpen={isDeployDialogOpen} 
+        onClose={() => setIsDeployDialogOpen(false)} 
+        code={generatedCode}
+      />
     </div>
   )
 }

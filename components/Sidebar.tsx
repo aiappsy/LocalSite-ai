@@ -12,7 +12,9 @@ import {
   Sparkles,
   HelpCircle,
   PlusCircle,
-  Settings
+  Settings,
+  LogOut,
+  User as UserIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
@@ -21,6 +23,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useAuth } from '@/hooks/use-auth';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export type SidebarTab = 'chat' | 'prompts' | 'home';
 
@@ -49,6 +53,8 @@ export function Sidebar({
   onNewChat,
   onToggleSettings
 }: SidebarProps) {
+  const { user, logout } = useAuth();
+
   return (
     <div 
       className={cn(
@@ -128,9 +134,36 @@ export function Sidebar({
         </TooltipProvider>
       </nav>
 
-      {/* Footer / Help & Collapse Toggle */}
+      {/* Footer / Help & User & Collapse Toggle */}
       <div className="p-2 border-t border-slate-800 space-y-2">
         <TooltipProvider delayDuration={0}>
+          {user && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={cn(
+                  "flex items-center gap-3 p-2 rounded-lg bg-slate-800/20 border border-slate-800/50 mb-2",
+                  isCollapsed ? "justify-center" : "px-3"
+                )}>
+                  <Avatar className="w-8 h-8 border border-slate-700">
+                    <AvatarImage src={user.photoURL || undefined} />
+                    <AvatarFallback className="bg-blue-600/20 text-blue-400 text-[10px]">
+                      {user.displayName?.charAt(0) || <UserIcon className="w-3 h-3" />}
+                    </AvatarFallback>
+                  </Avatar>
+                  {!isCollapsed && (
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-slate-200 truncate">{user.displayName}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
+                    </div>
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                Signed in as {user.displayName}
+              </TooltipContent>
+            </Tooltip>
+          )}
+
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -166,6 +199,26 @@ export function Sidebar({
               View User Manual
             </TooltipContent>
           </Tooltip>
+
+          {user && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => logout()}
+                   className={cn(
+                    "w-full flex items-center rounded-lg px-3 py-2 text-red-400/70 hover:bg-red-950/20 hover:text-red-400 transition-colors",
+                    isCollapsed ? "justify-center" : "gap-3"
+                  )}
+                >
+                  <LogOut className="w-5 h-5 shrink-0" />
+                  {!isCollapsed && <span className="font-medium text-sm">Sign Out</span>}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                Logout
+              </TooltipContent>
+            </Tooltip>
+          )}
         </TooltipProvider>
 
         <button

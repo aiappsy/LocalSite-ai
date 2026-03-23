@@ -37,6 +37,7 @@ interface GenerationViewProps {
   setIsSearchEnabled: (value: boolean) => void
   attachedFiles: File[]
   setAttachedFiles: (files: File[]) => void
+  onDeploy: () => void
 }
 
 export function GenerationView({
@@ -53,7 +54,8 @@ export function GenerationView({
   isSearchEnabled,
   setIsSearchEnabled,
   attachedFiles,
-  setAttachedFiles
+  setAttachedFiles,
+  onDeploy
 }: GenerationViewProps) {
   const [viewportSize, setViewportSize] = useState<"desktop" | "tablet" | "mobile">("desktop")
   const [copySuccess, setCopySuccess] = useState(false)
@@ -211,7 +213,8 @@ export function GenerationView({
     setIsSearchEnabled,
     attachedFiles,
     setAttachedFiles,
-    model
+    model,
+    onDeploy
   }
 
   const previewPanelProps = {
@@ -223,7 +226,8 @@ export function GenerationView({
     editedCode,
     isGenerating,
     previewKey,
-    previewContent
+    previewContent,
+    onDeploy
   }
 
   return (

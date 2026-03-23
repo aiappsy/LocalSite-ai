@@ -8,40 +8,101 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { LLMProvider, PROVIDER_CONFIGS } from '@/lib/providers/config';
 import { toast } from 'sonner';
 
+import { useAuth } from '@/hooks/use-auth';
+import { db } from '@/lib/firebase/config';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+
 // Custom hook for managing local storage keys
 export function useKeysManager() {
+  const { user } = useAuth();
   const [keys, setKeys] = useState<Record<string, { apiKey?: string; baseUrl?: string }>>({});
+  const [isCloudSyncing, setIsCloudSyncing] = useState(false);
 
+  // Load keys (Local first, then Cloud if logged in)
   useEffect(() => {
-    const stored = localStorage.getItem('localsite-ai-keys');
-    if (stored) {
-      try {
-        setKeys(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to parse stored keys', e);
+    const loadKeys = async () => {
+      // 1. Load from LocalStorage
+      const stored = localStorage.getItem('localsite-ai-keys');
+      const localKeys = stored ? JSON.parse(stored) : {};
+      
+      if (!user) {
+        setKeys(localKeys);
+        return;
       }
-    }
-  }, []);
 
-  const saveKey = (provider: string, apiKey?: string, baseUrl?: string) => {
+      // 2. If user logged in, merge with Cloud
+      setIsCloudSyncing(true);
+      try {
+        const docRef = doc(db, 'users', user.uid, 'settings', 'keys');
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const cloudKeys = docSnap.data() as Record<string, any>;
+          // Merge (Local usually takes precedence if just set, but for new device Cloud is better)
+          const mergedKeys = { ...localKeys, ...cloudKeys };
+          setKeys(mergedKeys);
+          // Sync merged back to local
+          localStorage.setItem('localsite-ai-keys', JSON.stringify(mergedKeys));
+        } else {
+          // New user or no cloud data, sync local to cloud
+          setKeys(localKeys);
+          if (Object.keys(localKeys).length > 0) {
+            await setDoc(docRef, localKeys);
+          }
+        }
+      } catch (e) {
+        console.error('Firestore Read Error:', e);
+        setKeys(localKeys);
+      } finally {
+        setIsCloudSyncing(false);
+      }
+    };
+
+    loadKeys();
+  }, [user]);
+
+  const saveKey = async (provider: string, apiKey?: string, baseUrl?: string) => {
     const newKeys = {
       ...keys,
       [provider]: { apiKey, baseUrl }
     };
     setKeys(newKeys);
     localStorage.setItem('localsite-ai-keys', JSON.stringify(newKeys));
-    toast.success(`${provider} credentials saved locally.`);
+
+    if (user) {
+      try {
+        const docRef = doc(db, 'users', user.uid, 'settings', 'keys');
+        await setDoc(docRef, newKeys, { merge: true });
+        toast.success(`${provider} credentials synced to cloud.`);
+      } catch (e) {
+        console.error('Firestore Sync Error:', e);
+        toast.warning(`${provider} saved locally but sync failed.`);
+      }
+    } else {
+      toast.success(`${provider} credentials saved locally.`);
+    }
   };
 
-  const removeKey = (provider: string) => {
+  const removeKey = async (provider: string) => {
     const newKeys = { ...keys };
     delete newKeys[provider];
     setKeys(newKeys);
     localStorage.setItem('localsite-ai-keys', JSON.stringify(newKeys));
-    toast.info(`${provider} credentials removed.`);
+
+    if (user) {
+      try {
+        const docRef = doc(db, 'users', user.uid, 'settings', 'keys');
+        await setDoc(docRef, newKeys);
+        toast.info(`${provider} credentials removed from cloud.`);
+      } catch (e) {
+        console.error('Firestore Remove Error:', e);
+      }
+    } else {
+      toast.info(`${provider} credentials removed.`);
+    }
   };
 
-  return { keys, saveKey, removeKey };
+  return { keys, saveKey, removeKey, isCloudSyncing };
 }
 
 export function KeysManager() {

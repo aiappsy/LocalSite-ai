@@ -19,7 +19,8 @@ import {
   Wand2,
   FlaskConical,
   TestTube2,
-  Loader2
+  Loader2,
+  Terminal
 } from 'lucide-react';
 import { 
   Select, 
@@ -66,6 +67,8 @@ interface SettingsPanelProps {
   onProviderChange: (provider: LLMProvider) => void;
   onModelChange: (model: string) => void;
   onSettingsChange: (settings: Partial<ModelSettings>) => void;
+  systemPrompt: string;
+  onSystemPromptChange: (value: string) => void;
   isLoadingModels?: boolean;
 }
 
@@ -77,6 +80,8 @@ export function SettingsPanel({
   onProviderChange,
   onModelChange,
   onSettingsChange,
+  systemPrompt,
+  onSystemPromptChange,
   isLoadingModels
 }: SettingsPanelProps) {
   const { keys, saveKey } = useKeysManager();
@@ -141,9 +146,12 @@ export function SettingsPanel({
       {/* Navigation Header */}
       <div className="p-4 border-b border-slate-800 bg-slate-950">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-900 h-9 p-1">
+          <TabsList className="grid w-full grid-cols-4 bg-slate-900 h-9 p-1">
             <TabsTrigger value="setup" className="text-[10px] h-7 uppercase font-bold transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
               <Zap className="w-3 h-3 mr-1.5" /> Setup
+            </TabsTrigger>
+            <TabsTrigger value="system" className="text-[10px] h-7 uppercase font-bold transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
+              <Terminal className="w-3 h-3 mr-1.5" /> System
             </TabsTrigger>
             <TabsTrigger value="model" className="text-[10px] h-7 uppercase font-bold transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
               <Cpu className="w-3 h-3 mr-1.5" /> Model
@@ -274,7 +282,49 @@ export function SettingsPanel({
             </div>
           </TabsContent>
 
-          {/* STEP 2: MODEL SELECTION */}
+          {/* STEP 2: SYSTEM INSTRUCTIONS */}
+          <TabsContent value="system" className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl border border-blue-900/30 bg-blue-900/5 space-y-3">
+                <div className="flex items-center gap-2 text-blue-400 font-semibold text-sm">
+                  <Terminal className="w-4 h-4" />
+                  System Instructions
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Guide the model's behavior, tone, and technical constraints. This prompt is sent with every message.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider font-mono">
+                    Instruction Set
+                  </Label>
+                </div>
+                <textarea
+                  className="w-full h-64 bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs text-slate-200 focus:ring-1 focus:ring-blue-500 outline-none resize-none custom-scrollbar"
+                  placeholder="e.g. You are an expert web developer specializing in clean, minimalist design..."
+                  value={systemPrompt}
+                  onChange={(e) => onSystemPromptChange(e.target.value)}
+                />
+                <p className="text-[10px] text-slate-500 italic">
+                  Tip: Be specific about the desired tech stack (e.g. "Use Tailwind CSS and Lucide icons").
+                </p>
+              </div>
+
+              <div className="pt-4">
+                <Button 
+                  onClick={() => setActiveTab("model")}
+                  className="w-full bg-slate-100 hover:bg-white text-slate-950 h-12 text-xs font-bold uppercase tracking-wider gap-2 shadow-xl"
+                >
+                  Continue to Model Selection
+                  <ChevronDown className="w-4 h-4 -rotate-90" />
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* STEP 3: MODEL SELECTION */}
           <TabsContent value="model" className="mt-0 space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="space-y-6">
               <div className="space-y-3">
