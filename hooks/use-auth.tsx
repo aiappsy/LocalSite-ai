@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   onAuthStateChanged, 
-  signInWithPopup, 
+  signInWithRedirect, 
+  getRedirectResult,
   GoogleAuthProvider, 
   signOut,
   User
@@ -34,6 +35,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
       return;
     }
+
+    // Handle the result of a redirect sign-in
+    getRedirectResult(auth).catch((error) => {
+      console.error("Redirect Result Error:", error);
+    });
     
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
@@ -49,10 +55,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
     const provider = new GoogleAuthProvider();
+    // Use Redirect instead of Popup to avoid COOP/COEP header issues in Next.js
     try {
-      await signInWithPopup(auth, provider);
+      setLoading(true);
+      await signInWithRedirect(auth, provider);
     } catch (error) {
       console.error("Login Error:", error);
+      setLoading(false);
       throw error;
     }
   };
