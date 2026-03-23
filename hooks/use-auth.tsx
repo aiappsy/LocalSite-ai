@@ -9,6 +9,7 @@ import {
   User
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -29,15 +30,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+    
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
 
   const loginWithGoogle = async () => {
+    if (!auth) {
+      toast.error("Firebase Auth not initialized. Check your environment variables.");
+      return;
+    }
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
@@ -48,6 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    if (!auth) return;
     try {
       await signOut(auth);
     } catch (error) {

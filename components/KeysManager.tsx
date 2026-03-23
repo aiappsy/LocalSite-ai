@@ -31,6 +31,12 @@ export function useKeysManager() {
       }
 
       // 2. If user logged in, merge with Cloud
+      if (!db) {
+        setKeys(localKeys);
+        setIsCloudSyncing(false);
+        return;
+      }
+
       setIsCloudSyncing(true);
       try {
         const docRef = doc(db, 'users', user.uid, 'settings', 'keys');
@@ -69,7 +75,7 @@ export function useKeysManager() {
     setKeys(newKeys);
     localStorage.setItem('localsite-ai-keys', JSON.stringify(newKeys));
 
-    if (user) {
+    if (user && db) {
       try {
         const docRef = doc(db, 'users', user.uid, 'settings', 'keys');
         await setDoc(docRef, newKeys, { merge: true });
@@ -89,7 +95,7 @@ export function useKeysManager() {
     setKeys(newKeys);
     localStorage.setItem('localsite-ai-keys', JSON.stringify(newKeys));
 
-    if (user) {
+    if (user && db) {
       try {
         const docRef = doc(db, 'users', user.uid, 'settings', 'keys');
         await setDoc(docRef, newKeys);

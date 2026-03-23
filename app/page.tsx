@@ -78,7 +78,7 @@ export default function Home() {
 
   // 1. Initial Loading & Auth Data Fetch
   useEffect(() => {
-    if (user) {
+    if (user && db) {
       // Sync settings from Firestore
       const settingsRef = doc(db, 'users', user.uid, 'settings', 'models');
       getDoc(settingsRef).then((docSnap) => {
@@ -106,9 +106,10 @@ export default function Home() {
 
   // 2. Cloud Persistence (Settings)
   useEffect(() => {
-    if (!user || isLoading) return;
+    if (!user || !db || isLoading) return;
 
     const syncToCloud = debounce(async () => {
+      if (!db) return;
       try {
         const docRef = doc(db, 'users', user.uid, 'settings', 'models');
         await setDoc(docRef, {
@@ -129,9 +130,10 @@ export default function Home() {
 
   // 3. Cloud Persistence (Latest Generation)
   useEffect(() => {
-    if (!user || !generationComplete || !generatedCode) return;
+    if (!user || !db || !generationComplete || !generatedCode) return;
 
     const syncGenToCloud = async () => {
+      if (!db) return;
       try {
         const docRef = doc(db, 'users', user.uid, 'generations', 'latest');
         await setDoc(docRef, {
