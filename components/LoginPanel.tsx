@@ -8,6 +8,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export const LoginPanel: React.FC = () => {
   const { loginWithGoogle, loading } = useAuth();
+  const [error, setError] = React.useState<string | null>(null);
+
+  const handleLogin = async () => {
+    setError(null);
+    
+    // Check for Secure Context (HTTPS requirement for Firebase Auth)
+    if (!window.isSecureContext && window.location.hostname !== 'localhost') {
+      const msg = "Google Login requires a secure connection (HTTPS). Please access the site via https://";
+      setError(msg);
+      return;
+    }
+
+    try {
+      await loginWithGoogle();
+    } catch (err: any) {
+      console.error("Login component error:", err);
+      setError(err.message || "Failed to initiate login. Please check your connection.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
@@ -30,6 +49,12 @@ export const LoginPanel: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {error && (
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs text-center animate-in slide-in-from-top-2 duration-300">
+              {error}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 gap-4 py-2">
             <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/30 border border-slate-700/30">
               <Zap className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
@@ -48,7 +73,7 @@ export const LoginPanel: React.FC = () => {
           </div>
 
           <Button 
-            onClick={loginWithGoogle} 
+            onClick={handleLogin} 
             disabled={loading}
             className="w-full h-12 bg-white hover:bg-slate-100 text-slate-950 font-bold flex items-center justify-center gap-3 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
           >

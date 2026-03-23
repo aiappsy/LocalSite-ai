@@ -54,6 +54,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.error("Firebase Auth not initialized. Check your environment variables.");
       return;
     }
+
+    // Double check for Secure Context (HTTPS requirement for Firebase Auth)
+    if (!window.isSecureContext && window.location.hostname !== 'localhost') {
+      const msg = "Google Login requires a secure connection (HTTPS). Please access your site via https://";
+      toast.error(msg);
+      throw new Error(msg);
+    }
+
     const provider = new GoogleAuthProvider();
     // Use Redirect instead of Popup to avoid COOP/COEP header issues in Next.js
     try {
