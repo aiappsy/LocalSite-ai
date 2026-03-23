@@ -80,13 +80,22 @@ export default function Home() {
   useEffect(() => {
     if (user) {
       // Sync settings from Firestore
-      const docRef = doc(db, 'users', user.uid, 'settings', 'models');
-      getDoc(docRef).then((docSnap) => {
+      const settingsRef = doc(db, 'users', user.uid, 'settings', 'models');
+      getDoc(settingsRef).then((docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (data.modelSettings) setModelSettings(data.modelSettings);
           if (data.systemPrompt) setSystemPrompt(data.systemPrompt);
           if (data.selectedProvider) setSelectedProvider(data.selectedProvider);
+        }
+      });
+
+      // Sync latest generation from Firestore
+      const genRef = doc(db, 'users', user.uid, 'generations', 'latest');
+      getDoc(genRef).then((docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.generatedCode) setGeneratedCode(data.generatedCode);
         }
       });
     }
@@ -95,7 +104,7 @@ export default function Home() {
     return () => clearTimeout(timer)
   }, [user])
 
-  // 2. Cloud Persistence (Debounced Sync to Firestore)
+  // 2. Cloud Persistence (Settings)
   useEffect(() => {
     if (!user || isLoading) return;
 
@@ -117,6 +126,26 @@ export default function Home() {
     syncToCloud();
     return () => syncToCloud.cancel();
   }, [user, modelSettings, systemPrompt, selectedProvider, isLoading]);
+
+  // 3. Cloud Persistence (Latest Generation)
+  useEffect(() => {
+    if (!user || !generationComplete || !generatedCode) return;
+
+    const syncGenToCloud = async () => {
+      try {
+        const docRef = doc(db, 'users', user.uid, 'generations', 'latest');
+        await setDoc(docRef, {
+          generatedCode,
+          updatedAt: new Date().toISOString()
+        });
+        console.log("Generation synced to cloud");
+      } catch (e) {
+        console.error("Gen Cloud Sync Error:", e);
+      }
+    };
+
+    syncGenToCloud();
+  }, [user, generationComplete, generatedCode]);
 
   // Fetch models whenever provider changes
   useEffect(() => {
