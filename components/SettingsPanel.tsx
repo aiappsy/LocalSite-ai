@@ -29,7 +29,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-// import { Slider } from '@/components/ui/slider';
+import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { 
   Tooltip,
@@ -424,15 +424,14 @@ export function SettingsPanel({
                     {settings.temperature.toFixed(2)}
                   </span>
                 </div>
-                {/* <Slider 
+                <Slider 
                   value={[settings.temperature]} 
                   min={0} 
                   max={2} 
                   step={0.01}
                   onValueChange={([val]) => onSettingsChange({ temperature: val })}
                   className="py-2"
-                /> */}
-                <div className="text-[10px] text-slate-600 italic">Slider disabled (Build safety)</div>
+                />
               </div>
 
               {/* Max Tokens */}
@@ -451,15 +450,14 @@ export function SettingsPanel({
                     {settings.maxTokens}
                   </span>
                 </div>
-                {/* <Slider 
+                <Slider 
                   value={[settings.maxTokens]} 
                   min={1} 
                   max={16384} 
                   step={128}
                   onValueChange={([val]) => onSettingsChange({ maxTokens: val })}
                   className="py-2"
-                /> */}
-                <div className="text-[10px] text-slate-600 italic">Slider disabled (Build safety)</div>
+                />
               </div>
 
               {/* Safety */}

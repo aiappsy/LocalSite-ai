@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { ProviderSelector } from "@/components/provider-selector"
+import { AlertCircle, Key as KeyIcon, Settings } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { LLMProvider } from "@/lib/providers/config"
 
 interface Model {
   id: string
@@ -19,12 +22,18 @@ interface WelcomeViewProps {
   prompt: string
   setPrompt: (value: string) => void
   onGenerate: () => void
+  onOpenSettings: () => void
+  hasApiKey: boolean
+  providerName: string
 }
 
 export function WelcomeView({
   prompt,
   setPrompt,
-  onGenerate
+  onGenerate,
+  onOpenSettings,
+  hasApiKey,
+  providerName
 }: WelcomeViewProps) {
   const [titleClass, setTitleClass] = useState("pre-animation")
 
@@ -44,6 +53,24 @@ export function WelcomeView({
         >
           WHAT ARE WE BUILDING?
         </h1>
+        
+        {!hasApiKey && (
+          <Alert className="mb-8 bg-blue-900/20 border-blue-500/30 text-blue-200 py-3 animate-in fade-in slide-in-from-top-4 duration-500">
+            <AlertCircle className="h-4 w-4 text-blue-400" />
+            <AlertTitle className="text-sm font-semibold mb-1">Setup Required</AlertTitle>
+            <AlertDescription className="text-xs flex items-center justify-between gap-4">
+              <span>You haven't set an API Key for <strong>{providerName}</strong>. Open Model Settings to get started.</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onOpenSettings}
+                className="h-7 text-[10px] bg-blue-600/10 border-blue-500/30 hover:bg-blue-600/20 text-blue-400"
+              >
+                <Settings className="w-3 h-3 mr-1" /> Open Setup
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="relative w-full mb-6 group">
           <Textarea

@@ -268,6 +268,9 @@ export default function Home() {
                 prompt={prompt}
                 setPrompt={setPrompt}
                 onGenerate={() => handleGenerate()}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+                hasApiKey={!!keys[selectedProvider]?.apiKey}
+                providerName={selectedProvider.toUpperCase()}
               />
             )}
 
