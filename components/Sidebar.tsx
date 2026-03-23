@@ -59,7 +59,7 @@ export function Sidebar({
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className="text-lg tracking-tight">AI Studio</span>
+            <span className="text-lg tracking-tight">Aiappsy WebCrafter</span>
           </div>
         )}
         {isCollapsed && (

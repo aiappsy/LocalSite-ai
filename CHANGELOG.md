@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.6.0] - 2026-03-23
+
+### Major Changes - AI Studio Redesign
+- **Total UI Rebrand**: Renamed application to **Aiappsy WebCrafter**.
+- **Three-Pane Workspace**: Implemented a professional, resizable layout inspired by Google AI Studio.
+- **Dedicated Sidebar**: New navigation system for Home, Chat, Prompts, and API Keys.
+- **Advanced Model Settings**: Added a slide-out panel for Temperature, Top P, Max Tokens, and Safety Settings.
+- **Secure Key Manager**: Implemented client-side API key storage with direct setup links for all major providers.
+- **System Instructions**: New interface for managing persistent system-level guidance.
+
+### Refactor
+- Migrated main layout to `resizable-panels` for efficient workspace management.
+- Decoupled model fetching and parameters from the core generation loop for more dynamic control.
+- Updated `useCodeGeneration` hook to support custom overrides for API keys and base URLs.
+
+### Deployment
+- Optimized for **Coolify** with standalone Next.js mode and multi-stage Docker builds.
+
+
 ## [0.5.1] - 2026-01-05
 
 ### Fixes

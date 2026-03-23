@@ -1,17 +1,17 @@
-# LocalSite AI - 0.5.0 Update!
+# Aiappsy WebCrafter - 0.6.0 Redesign!
 
 > **What's new?** See the [Changelog](./CHANGELOG.md) for details.
 
-A modern web application that uses AI to generate HTML, CSS, and JavaScript code based on natural language prompts. Simply describe what you want to build, and the AI will create a complete, self-contained web page for you.
+A professional, Google AI Studio-inspired web workspace that uses AI to generate high-quality HTML, CSS, and JavaScript code. Describe your vision, and **Aiappsy WebCrafter** will build it across a sophisticated three-pane interface.
 
 ## Features
 
-- **AI-Powered Code Generation**: Generate complete web pages from text descriptions
-- **Live Preview**: See your generated code in action with desktop, tablet, and mobile views
-- **Code Editing**: Edit the generated code directly in the browser
-- **Multiple AI Providers**: Support for DeepSeek, custom OpenAI-compatible APIs, and local models
-- **Responsive Design**: Works on desktop and mobile devices
-- **Modern UI**: Clean, dark-themed interface with a focus on usability
+- **Google AI Studio UI/UX**: Professional three-pane resizable layout with dedicated navigation and settings.
+- **Advanced Model Controls**: Real-time tuning of Temperature, Top P, Max Tokens, and Safety Settings.
+- **Secure API Key Management**: Store your keys (OpenRouter, Gemini, Anthropic, etc.) locally in your browser.
+- **System Instructions**: Guide the AI's persona and behavior with persistent system-level prompts.
+- **Live Preview & Code Editing**: Instant feedback with desktop/tablet/mobile viewports and integrated editor.
+- **Multi-Provider Support**: Seamlessly switch between Cloud (DeepSeek, OpenRouter, Google, Anthropic, Mistral, Cerebras) and Local (Ollama, LM Studio) models.
 
 ## Tech Stack
 

@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "AI Code Generator",
+  title: "Aiappsy WebCrafter",
   description: "Modern AI-powered code generation web app",
     generator: 'v0.dev'
 }
