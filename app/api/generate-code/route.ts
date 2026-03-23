@@ -6,7 +6,18 @@ import { DEFAULT_SYSTEM_PROMPT, THINKING_SYSTEM_PROMPT } from '@/lib/providers/p
 export async function POST(request: NextRequest) {
   try {
     // Parse the JSON body
-    const { prompt, model, provider: providerParam, customSystemPrompt, maxTokens, systemPromptType } = await request.json();
+    const { 
+      prompt, 
+      model, 
+      provider: providerParam, 
+      customSystemPrompt, 
+      maxTokens, 
+      systemPromptType,
+      temperature,
+      topP,
+      topK,
+      customCredentials 
+    } = await request.json();
 
     // Check if prompt and model are provided
     if (!prompt || !model) {
@@ -16,8 +27,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse maxTokens as a number if it's provided
+    // Parse numeric parameters
     const parsedMaxTokens = maxTokens ? parseInt(maxTokens.toString(), 10) : undefined;
+    const parsedTemperature = temperature !== undefined ? parseFloat(temperature.toString()) : undefined;
+    const parsedTopP = topP !== undefined ? parseFloat(topP.toString()) : undefined;
+    const parsedTopK = topK !== undefined ? parseInt(topK.toString(), 10) : undefined;
 
     // Determine the provider to use
     let provider: LLMProvider;
@@ -47,7 +61,14 @@ export async function POST(request: NextRequest) {
       model,
       prompt,
       finalSystemPrompt,
-      parsedMaxTokens
+      {
+        maxTokens: parsedMaxTokens,
+        temperature: parsedTemperature,
+        topP: parsedTopP,
+        topK: parsedTopK,
+        // We'll pass custom credentials if they exist for this provider
+        ...(customCredentials?.[provider] || {})
+      }
     );
 
     // Create a custom stream that sends text and reasoning as separate JSON lines

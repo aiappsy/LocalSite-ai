@@ -116,13 +116,15 @@ export function getProviderConfig(provider: LLMProvider): ProviderConfig {
 }
 
 // Helper function to get a provider's base URL
-export function getProviderBaseUrl(provider: LLMProvider): string {
+export function getProviderBaseUrl(provider: LLMProvider, customUrl?: string | null): string {
+  if (customUrl) return customUrl;
   const config = getProviderConfig(provider);
   return process.env[config.baseUrlEnvVar] || config.defaultBaseUrl;
 }
 
 // Helper function to get a provider's API key
-export function getProviderApiKey(provider: LLMProvider): string | null {
+export function getProviderApiKey(provider: LLMProvider, customKey?: string | null): string | null {
+  if (customKey) return customKey;
   const config = getProviderConfig(provider);
   if (!config.apiKeyEnvVar) return null;
   return process.env[config.apiKeyEnvVar] || null;
@@ -135,8 +137,8 @@ function getDisabledProviders(): LLMProvider[] {
   return disabled.split(',').map(p => p.trim()) as LLMProvider[];
 }
 
-// Check if a provider is configured and available
-export function isProviderConfigured(provider: LLMProvider): boolean {
+// Check if a provider is configured and available (via ENV or custom)
+export function isProviderConfigured(provider: LLMProvider, customKey?: string | null, customUrl?: string | null): boolean {
   const config = getProviderConfig(provider);
 
   // Check if explicitly disabled
@@ -144,24 +146,24 @@ export function isProviderConfigured(provider: LLMProvider): boolean {
     return false;
   }
 
+  // If a custom key or URL matches the requirements, it's "configured"
   if (config.isLocal) {
-    // Local providers (Ollama, LM Studio): always available (use default URL)
     return true;
-  } else if (provider === LLMProvider.OPENAI_COMPATIBLE) {
-    // Custom API: requires BOTH base URL and API key (no defaults)
-    const hasBaseUrl = !!process.env[config.baseUrlEnvVar]?.trim();
-    const hasApiKey = !!process.env[config.apiKeyEnvVar!]?.trim();
-    return hasBaseUrl && hasApiKey;
-  } else {
-    // Cloud providers with defaults (DeepSeek, OpenRouter): require API key only
-    if (!config.apiKeyEnvVar) return false;
-    return !!process.env[config.apiKeyEnvVar]?.trim();
   }
+
+  const apiKey = customKey || (config.apiKeyEnvVar ? process.env[config.apiKeyEnvVar] : null);
+  const baseUrl = customUrl || (process.env[config.baseUrlEnvVar] || config.defaultBaseUrl);
+
+  if (provider === LLMProvider.OPENAI_COMPATIBLE) {
+    return !!apiKey?.trim() && !!baseUrl?.trim();
+  }
+
+  return !!apiKey?.trim();
 }
 
-// List of all available providers (only those that are configured)
+// List of all available providers (showing all supported ones by default now)
 export function getAvailableProviders(): ProviderConfig[] {
   return Object.values(PROVIDER_CONFIGS).filter(config =>
-    isProviderConfigured(config.id)
+    !getDisabledProviders().includes(config.id)
   );
 }

@@ -15,7 +15,13 @@ export const SYSTEM_PROMPT = "You are an expert web developer AI. Your task is t
 // Common interface for all providers
 export interface LLMProviderClient {
   getModels: () => Promise<{ id: string; name: string }[]>;
-  getModel: (modelId: string) => LanguageModel;
+  getModel: (modelId: string, options?: ModelOptions) => LanguageModel;
+}
+
+export interface ModelOptions {
+  temperature?: number;
+  topP?: number;
+  topK?: number;
 }
 
 // Helper function to wrap a model with reasoning middleware for <think> tag extraction
@@ -68,26 +74,26 @@ function getLMStudioProvider() {
 }
 
 // Factory function to create a provider client
-export function createProviderClient(provider: LLMProvider): LLMProviderClient {
+export function createProviderClient(provider: LLMProvider, customApiKey?: string | null, customBaseUrl?: string | null): LLMProviderClient {
   switch (provider) {
     case LLMProvider.DEEPSEEK:
-      return new DeepSeekProviderClient();
+      return new DeepSeekProviderClient(customApiKey, customBaseUrl);
     case LLMProvider.OPENROUTER:
-      return new OpenRouterProviderClient();
+      return new OpenRouterProviderClient(customApiKey, customBaseUrl);
     case LLMProvider.ANTHROPIC:
-      return new AnthropicProviderClient();
+      return new AnthropicProviderClient(customApiKey, customBaseUrl);
     case LLMProvider.GOOGLE:
-      return new GoogleProviderClient();
+      return new GoogleProviderClient(customApiKey, customBaseUrl);
     case LLMProvider.MISTRAL:
-      return new MistralProviderClient();
+      return new MistralProviderClient(customApiKey, customBaseUrl);
     case LLMProvider.CEREBRAS:
-      return new CerebrasProviderClient();
+      return new CerebrasProviderClient(customApiKey, customBaseUrl);
     case LLMProvider.OPENAI_COMPATIBLE:
-      return new OpenAICompatibleProviderClient();
+      return new OpenAICompatibleProviderClient(customApiKey, customBaseUrl);
     case LLMProvider.OLLAMA:
-      return new OllamaProviderClient();
+      return new OllamaProviderClient(customBaseUrl);
     case LLMProvider.LM_STUDIO:
-      return new LMStudioProviderClient();
+      return new LMStudioProviderClient(customBaseUrl);
     default:
       throw new Error(`Unsupported provider: ${provider}`);
   }
@@ -95,7 +101,14 @@ export function createProviderClient(provider: LLMProvider): LLMProviderClient {
 
 // DeepSeek Provider Client
 class DeepSeekProviderClient implements LLMProviderClient {
-  private provider = getDeepSeekProvider();
+  private provider;
+
+  constructor(customApiKey?: string | null, customBaseUrl?: string | null) {
+    this.provider = createDeepSeek({ 
+      apiKey: getProviderApiKey(LLMProvider.DEEPSEEK, customApiKey) || '',
+      baseURL: getProviderBaseUrl(LLMProvider.DEEPSEEK, customBaseUrl),
+    });
+  }
 
   async getModels() {
     // DeepSeek has fixed models (no public API for listing)
@@ -113,11 +126,19 @@ class DeepSeekProviderClient implements LLMProviderClient {
 
 // OpenRouter Provider Client
 class OpenRouterProviderClient implements LLMProviderClient {
-  private provider = getOpenRouterProvider();
+  private customApiKey: string | null;
+  private provider;
+
+  constructor(customApiKey?: string | null, customBaseUrl?: string | null) {
+    this.customApiKey = customApiKey || null;
+    this.provider = createOpenRouter({ 
+      apiKey: getProviderApiKey(LLMProvider.OPENROUTER, customApiKey) || '',
+    });
+  }
 
   async getModels() {
     try {
-      const apiKey = getProviderApiKey(LLMProvider.OPENROUTER);
+      const apiKey = getProviderApiKey(LLMProvider.OPENROUTER, this.customApiKey);
       const response = await fetch('https://openrouter.ai/api/v1/models', {
         headers: apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {},
       });
@@ -137,19 +158,28 @@ class OpenRouterProviderClient implements LLMProviderClient {
     }
   }
 
-  getModel(modelId: string): LanguageModel {
-    const baseModel = this.provider.chat(modelId) as unknown as LanguageModel;
+  getModel(modelId: string, options?: ModelOptions): LanguageModel {
+    const baseModel = this.provider.chat(modelId, options) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
 
 // Anthropic Provider Client
 class AnthropicProviderClient implements LLMProviderClient {
-  private provider = getAnthropicProvider();
+  private customApiKey: string | null;
+  private provider;
+
+  constructor(customApiKey?: string | null, customBaseUrl?: string | null) {
+    this.customApiKey = customApiKey || null;
+    this.provider = createAnthropic({ 
+      apiKey: getProviderApiKey(LLMProvider.ANTHROPIC, customApiKey) || '',
+      baseURL: getProviderBaseUrl(LLMProvider.ANTHROPIC, customBaseUrl),
+    });
+  }
 
   async getModels() {
     try {
-      const apiKey = getProviderApiKey(LLMProvider.ANTHROPIC);
+      const apiKey = getProviderApiKey(LLMProvider.ANTHROPIC, this.customApiKey);
       const response = await fetch('https://api.anthropic.com/v1/models', {
         headers: {
           'x-api-key': apiKey || '',
@@ -180,11 +210,20 @@ class AnthropicProviderClient implements LLMProviderClient {
 
 // Google AI Provider Client
 class GoogleProviderClient implements LLMProviderClient {
-  private provider = getGoogleProvider();
+  private customApiKey: string | null;
+  private provider;
+
+  constructor(customApiKey?: string | null, customBaseUrl?: string | null) {
+    this.customApiKey = customApiKey || null;
+    this.provider = createGoogleGenerativeAI({ 
+      apiKey: getProviderApiKey(LLMProvider.GOOGLE, customApiKey) || '',
+      baseURL: getProviderBaseUrl(LLMProvider.GOOGLE, customBaseUrl),
+    });
+  }
 
   async getModels() {
     try {
-      const apiKey = getProviderApiKey(LLMProvider.GOOGLE);
+      const apiKey = getProviderApiKey(LLMProvider.GOOGLE, this.customApiKey);
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
 
       if (!response.ok) {
@@ -204,19 +243,28 @@ class GoogleProviderClient implements LLMProviderClient {
     }
   }
 
-  getModel(modelId: string): LanguageModel {
-    const baseModel = this.provider(modelId) as unknown as LanguageModel;
+  getModel(modelId: string, options?: ModelOptions): LanguageModel {
+    const baseModel = this.provider(modelId, options) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
 
 // Mistral Provider Client
 class MistralProviderClient implements LLMProviderClient {
-  private provider = getMistralProvider();
+  private customApiKey: string | null;
+  private provider;
+
+  constructor(customApiKey?: string | null, customBaseUrl?: string | null) {
+    this.customApiKey = customApiKey || null;
+    this.provider = createMistral({ 
+      apiKey: getProviderApiKey(LLMProvider.MISTRAL, customApiKey) || '',
+      baseURL: getProviderBaseUrl(LLMProvider.MISTRAL, customBaseUrl),
+    });
+  }
 
   async getModels() {
     try {
-      const apiKey = getProviderApiKey(LLMProvider.MISTRAL);
+      const apiKey = getProviderApiKey(LLMProvider.MISTRAL, this.customApiKey);
       const response = await fetch('https://api.mistral.ai/v1/models', {
         headers: { 'Authorization': `Bearer ${apiKey}` },
       });
@@ -236,19 +284,28 @@ class MistralProviderClient implements LLMProviderClient {
     }
   }
 
-  getModel(modelId: string): LanguageModel {
-    const baseModel = this.provider(modelId) as unknown as LanguageModel;
+  getModel(modelId: string, options?: ModelOptions): LanguageModel {
+    const baseModel = this.provider(modelId, options) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
 
 // Cerebras Provider Client
 class CerebrasProviderClient implements LLMProviderClient {
-  private provider = getCerebrasProvider();
+  private customApiKey: string | null;
+  private provider;
+
+  constructor(customApiKey?: string | null, customBaseUrl?: string | null) {
+    this.customApiKey = customApiKey || null;
+    this.provider = createCerebras({ 
+      apiKey: getProviderApiKey(LLMProvider.CEREBRAS, customApiKey) || '',
+      baseURL: getProviderBaseUrl(LLMProvider.CEREBRAS, customBaseUrl),
+    });
+  }
 
   async getModels() {
     try {
-      const apiKey = getProviderApiKey(LLMProvider.CEREBRAS);
+      const apiKey = getProviderApiKey(LLMProvider.CEREBRAS, this.customApiKey);
       const response = await fetch('https://api.cerebras.ai/v1/models', {
         headers: { 'Authorization': `Bearer ${apiKey}` },
       });
@@ -268,25 +325,37 @@ class CerebrasProviderClient implements LLMProviderClient {
     }
   }
 
-  getModel(modelId: string): LanguageModel {
-    const baseModel = this.provider(modelId) as unknown as LanguageModel;
+  getModel(modelId: string, options?: ModelOptions): LanguageModel {
+    const baseModel = this.provider(modelId, options) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
 
 // Generic OpenAI-Compatible Provider Client
 class OpenAICompatibleProviderClient implements LLMProviderClient {
-  private provider = getOpenAICompatibleProvider();
+  private customApiKey: string | null;
+  private customBaseUrl: string | null;
+  private provider;
+
+  constructor(customApiKey?: string | null, customBaseUrl?: string | null) {
+    this.customApiKey = customApiKey || null;
+    this.customBaseUrl = customBaseUrl || null;
+    this.provider = createOpenAICompatible({
+      name: 'openai_compatible',
+      baseURL: getProviderBaseUrl(LLMProvider.OPENAI_COMPATIBLE, customBaseUrl),
+      apiKey: getProviderApiKey(LLMProvider.OPENAI_COMPATIBLE, customApiKey) || '',
+    });
+  }
 
   async getModels() {
     const envModel = process.env.OPENAI_COMPATIBLE_MODEL;
-    if (envModel) {
+    if (envModel && !this.customBaseUrl) {
       return [{ id: envModel, name: envModel }];
     }
 
     try {
-      const baseUrl = getProviderBaseUrl(LLMProvider.OPENAI_COMPATIBLE);
-      const apiKey = getProviderApiKey(LLMProvider.OPENAI_COMPATIBLE);
+      const baseUrl = getProviderBaseUrl(LLMProvider.OPENAI_COMPATIBLE, this.customBaseUrl);
+      const apiKey = getProviderApiKey(LLMProvider.OPENAI_COMPATIBLE, this.customApiKey);
       const response = await fetch(`${baseUrl}/models`, {
         headers: apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {},
       });
@@ -306,15 +375,19 @@ class OpenAICompatibleProviderClient implements LLMProviderClient {
     }
   }
 
-  getModel(modelId: string): LanguageModel {
-    const baseModel = this.provider(modelId) as unknown as LanguageModel;
+  getModel(modelId: string, options?: ModelOptions): LanguageModel {
+    const baseModel = this.provider(modelId, options) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
 
 // Ollama Provider Client
 class OllamaProviderClient implements LLMProviderClient {
-  private baseUrl = getProviderBaseUrl(LLMProvider.OLLAMA);
+  private baseUrl: string;
+
+  constructor(customBaseUrl?: string | null) {
+    this.baseUrl = getProviderBaseUrl(LLMProvider.OLLAMA, customBaseUrl);
+  }
 
   async getModels() {
     try {
@@ -334,10 +407,9 @@ class OllamaProviderClient implements LLMProviderClient {
     }
   }
 
-  getModel(modelId: string): LanguageModel {
+  getModel(modelId: string, options?: ModelOptions): LanguageModel {
     // Enable Ollama's native thinking support for reasoning models (deepseek-r1, qwen3)
-    // The 'think' option enables the model to return thinking in message.thinking field
-    const baseModel = ollama(modelId, { think: true });
+    const baseModel = ollama(modelId, { think: true, ...options });
     // Wrap with extractReasoningMiddleware to handle <think> tags if present
     return wrapLanguageModel({
       model: baseModel as Parameters<typeof wrapLanguageModel>[0]['model'],
@@ -348,8 +420,17 @@ class OllamaProviderClient implements LLMProviderClient {
 
 // LM Studio Provider Client
 class LMStudioProviderClient implements LLMProviderClient {
-  private provider = getLMStudioProvider();
-  private baseUrl = getProviderBaseUrl(LLMProvider.LM_STUDIO);
+  private baseUrl: string;
+  private provider;
+
+  constructor(customBaseUrl?: string | null) {
+    this.baseUrl = getProviderBaseUrl(LLMProvider.LM_STUDIO, customBaseUrl);
+    this.provider = createOpenAICompatible({
+      name: 'lm_studio',
+      baseURL: this.baseUrl,
+      apiKey: 'lm-studio',
+    });
+  }
 
   async getModels() {
     try {
@@ -369,8 +450,8 @@ class LMStudioProviderClient implements LLMProviderClient {
     }
   }
 
-  getModel(modelId: string): LanguageModel {
-    const baseModel = this.provider(modelId) as unknown as LanguageModel;
+  getModel(modelId: string, options?: ModelOptions): LanguageModel {
+    const baseModel = this.provider(modelId, options) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
@@ -381,16 +462,20 @@ export async function generateCodeStream(
   modelId: string,
   prompt: string,
   systemPrompt?: string | null,
-  maxTokens?: number
+  options?: ModelOptions & { maxTokens?: number }
 ): Promise<ReturnType<typeof streamText>> {
   const client = createProviderClient(provider);
-  const model = client.getModel(modelId);
+  const model = client.getModel(modelId, {
+    temperature: options?.temperature,
+    topP: options?.topP,
+    topK: options?.topK,
+  });
 
   const result = streamText({
     model,
     system: systemPrompt || SYSTEM_PROMPT,
     prompt,
-    ...(maxTokens ? { maxTokens } : {}),
+    ...(options?.maxTokens ? { maxTokens: options.maxTokens } : {}),
   });
 
   return result;

@@ -6,8 +6,12 @@ interface GenerateCodeParams {
     model: string
     provider: string
     maxTokens?: number
+    temperature?: number
+    topP?: number
+    topK?: number
     systemPromptType: string // 'default', 'thinking', 'custom'
     customSystemPrompt?: string
+    customCredentials?: Record<string, { apiKey?: string; baseUrl?: string }>
 }
 
 // Interface for NDJSON stream parts
@@ -28,8 +32,12 @@ export function useCodeGeneration() {
         model,
         provider,
         maxTokens,
+        temperature,
+        topP,
+        topK,
         systemPromptType,
-        customSystemPrompt
+        customSystemPrompt,
+        customCredentials
     }: GenerateCodeParams) => {
         if (!prompt.trim() || !model || !provider) {
             toast.error("Please enter a prompt and select a provider and model.")
@@ -60,8 +68,12 @@ export function useCodeGeneration() {
                     model,
                     provider,
                     maxTokens,
+                    temperature,
+                    topP,
+                    topK,
                     systemPromptType,
                     customSystemPrompt: finalCustomSystemPrompt,
+                    customCredentials,
                 }),
             })
 

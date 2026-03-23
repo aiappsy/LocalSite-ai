@@ -214,54 +214,17 @@ export function GenerationView({
   }
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
-      {/* Header */}
-      <header className="border-b border-gray-800 py-2 px-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold text-white">
-              {provider === 'deepseek' ? 'DEEPSEEK' :
-                provider === 'openai_compatible' ? 'CUSTOM API' :
-                  provider === 'ollama' ? 'OLLAMA' :
-                    provider === 'lm_studio' ? 'LM STUDIO' : 'AI'}
-            </h1>
-            <Badge variant="outline" className="bg-gray-900 text-white border-white">
-              {model}
-            </Badge>
-            {thinkingOutput && (
-              <div className="ml-2">
-                <ThinkingIndicator
-                  thinkingOutput={thinkingOutput}
-                  isThinking={isThinking}
-                  position="top-left"
-                />
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-gray-800 text-gray-400 hover:text-white hover:border-gray-700 h-8"
-              disabled={isGenerating}
-              onClick={() => window.location.reload()}
-            >
-              <RefreshCw className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">Restart</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-gray-800 text-gray-400 hover:text-white hover:border-gray-700 h-8"
-              disabled={!generatedCode || isGenerating}
-              onClick={downloadCode}
-            >
-              <Download className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">Export</span>
-            </Button>
-          </div>
+    <div className="h-full bg-slate-950 text-white flex flex-col overflow-hidden">
+      {/* Reasoning/Thinking Indicator if active */}
+      {thinkingOutput && (
+        <div className="bg-blue-600/5 border-b border-blue-600/10 p-2 flex items-center justify-center">
+           <ThinkingIndicator
+              thinkingOutput={thinkingOutput}
+              isThinking={isThinking}
+              position="top-right"
+            />
         </div>
-      </header>
+      )}
 
       {/* Mobile Tab-Navigation */}
       <div className="md:hidden flex border-b border-gray-800 bg-gray-900/50">

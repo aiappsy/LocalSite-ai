@@ -3,43 +3,44 @@ import { LLMProvider, getAvailableProviders } from '@/lib/providers/config';
 import { createProviderClient } from '@/lib/providers/provider';
 
 export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const providerParam = searchParams.get('provider');
+  return handleFetchModels(providerParam as LLMProvider);
+}
+
+export async function POST(request: NextRequest) {
   try {
-    // Get the provider from the request or use the default provider
-    const searchParams = request.nextUrl.searchParams;
-    const providerParam = searchParams.get('provider');
+    const { provider, customApiKey, customBaseUrl } = await request.json();
+    return handleFetchModels(provider, customApiKey, customBaseUrl);
+  } catch (error) {
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+  }
+}
 
-    let provider: LLMProvider;
+async function handleFetchModels(providerId: LLMProvider, customApiKey?: string, customBaseUrl?: string) {
+  try {
+    let provider: LLMProvider = providerId;
 
-    if (providerParam && Object.values(LLMProvider).includes(providerParam as LLMProvider)) {
-      provider = providerParam as LLMProvider;
-    } else {
-      // Use the default provider from environment variables or DeepSeek as fallback
+    if (!provider || !Object.values(LLMProvider).includes(provider)) {
       provider = (process.env.DEFAULT_PROVIDER as LLMProvider) || LLMProvider.DEEPSEEK;
     }
 
-    // Create the provider client
-    const providerClient = createProviderClient(provider);
+    // Create the provider client with custom credentials if provided
+    const providerClient = createProviderClient(provider, customApiKey, customBaseUrl);
 
     // Get the available models
     const models = await providerClient.getModels();
 
-    // Return the list of models as JSON response
-    return NextResponse.json(models);
+    return NextResponse.json({ models });
   } catch (error) {
     console.error('Error fetching models:', error);
-
-    // Return a more specific error message if available
     const errorMessage = error instanceof Error ? error.message : 'Error fetching models';
-
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
 // Endpoint to get available providers
-export async function POST() {
+export async function PATCH() {
   try {
     const providers = getAvailableProviders().map(provider => ({
       id: provider.id,
@@ -50,11 +51,6 @@ export async function POST() {
 
     return NextResponse.json(providers);
   } catch (error) {
-    console.error('Error fetching providers:', error);
-
-    return NextResponse.json(
-      { error: 'Error fetching providers' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Error fetching providers' }, { status: 500 });
   }
 }
