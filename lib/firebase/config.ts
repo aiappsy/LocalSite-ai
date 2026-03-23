@@ -22,4 +22,13 @@ const app = getApps().length > 0
 const auth = app ? getAuth(app) : null;
 const db = app ? getFirestore(app) : null;
 
+// Diagnostics
+if (typeof window !== 'undefined') {
+  if (!isConfigValid) {
+    console.warn("Firebase: Configuration missing or invalid. Check environment variables.");
+  } else if (app) {
+    console.log("Firebase: Initialized successfully on", window.location.hostname);
+  }
+}
+
 export { app, auth, db };

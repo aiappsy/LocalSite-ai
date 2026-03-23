@@ -67,8 +67,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       await signInWithRedirect(auth, provider);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login Error:", error);
+      const errorMessage = error.code 
+        ? `Auth Error (${error.code}): ${error.message}`
+        : "Failed to initiate login. Please check your connection.";
+      toast.error(errorMessage);
       setLoading(false);
       throw error;
     }

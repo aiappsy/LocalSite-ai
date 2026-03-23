@@ -24,7 +24,8 @@ export const LoginPanel: React.FC = () => {
       await loginWithGoogle();
     } catch (err: any) {
       console.error("Login component error:", err);
-      setError(err.message || "Failed to initiate login. Please check your connection.");
+      const technicalMsg = err.code ? `Auth Error (${err.code}): ${err.message}` : err.message;
+      setError(technicalMsg || "Failed to initiate login. Please check your connection.");
     }
   };
 
