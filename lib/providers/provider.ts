@@ -178,8 +178,16 @@ class AnthropicProviderClient implements LLMProviderClient {
   }
 
   async getModels() {
+    const apiFallbackModels = [
+      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet' },
+      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku' },
+      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' },
+    ];
+
     try {
       const apiKey = getProviderApiKey(LLMProvider.ANTHROPIC, this.customApiKey);
+      if (!apiKey) return apiFallbackModels;
+
       const response = await fetch('https://api.anthropic.com/v1/models', {
         headers: {
           'x-api-key': apiKey || '',
@@ -188,17 +196,18 @@ class AnthropicProviderClient implements LLMProviderClient {
       });
 
       if (!response.ok) {
-        throw new Error(`Error fetching Anthropic models: ${response.statusText}`);
+        console.warn(`Could not fetch models from Anthropic API: ${response.statusText}. Using fallbacks.`);
+        return apiFallbackModels;
       }
 
       const data = await response.json();
       return data.data ? data.data.map((model: { id: string; display_name?: string }) => ({
         id: model.id,
         name: model.display_name || model.id,
-      })) : [];
+      })) : apiFallbackModels;
     } catch (error) {
-      console.error('Error fetching Anthropic models:', error);
-      throw new Error('Cannot fetch Anthropic models. Check your API key.');
+      console.error('Error fetching Anthropic models, using fallbacks:', error);
+      return apiFallbackModels;
     }
   }
 
@@ -222,24 +231,36 @@ class GoogleProviderClient implements LLMProviderClient {
   }
 
   async getModels() {
+    const apiFallbackModels = [
+      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
+      { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
+      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
+      { id: 'gemini-1.0-pro', name: 'Gemini 1.0 Pro' },
+    ];
+
     try {
       const apiKey = getProviderApiKey(LLMProvider.GOOGLE, this.customApiKey);
+      if (!apiKey) return apiFallbackModels;
+
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
 
       if (!response.ok) {
-        throw new Error(`Error fetching Google AI models: ${response.statusText}`);
+        console.warn(`Could not fetch models from Google AI API: ${response.statusText}. Using fallbacks.`);
+        return apiFallbackModels;
       }
 
       const data = await response.json();
-      return data.models ? data.models
+      if (!data.models || data.models.length === 0) return apiFallbackModels;
+
+      return data.models
         .filter((model: { name: string }) => model.name.includes('gemini'))
         .map((model: { name: string; displayName?: string }) => ({
           id: model.name.replace('models/', ''),
           name: model.displayName || model.name.replace('models/', ''),
-        })) : [];
+        }));
     } catch (error) {
-      console.error('Error fetching Google AI models:', error);
-      throw new Error('Cannot fetch Google AI models. Check your API key.');
+      console.error('Error fetching Google AI models, using fallbacks:', error);
+      return apiFallbackModels;
     }
   }
 
@@ -263,24 +284,34 @@ class MistralProviderClient implements LLMProviderClient {
   }
 
   async getModels() {
+    const apiFallbackModels = [
+      { id: 'mistral-large-latest', name: 'Mistral Large' },
+      { id: 'mistral-small-latest', name: 'Mistral Small' },
+      { id: 'pixtral-12b-2409', name: 'Pixtral 12B' },
+      { id: 'open-mistral-nemo', name: 'Mistral Nemo' },
+    ];
+
     try {
       const apiKey = getProviderApiKey(LLMProvider.MISTRAL, this.customApiKey);
+      if (!apiKey) return apiFallbackModels;
+
       const response = await fetch('https://api.mistral.ai/v1/models', {
         headers: { 'Authorization': `Bearer ${apiKey}` },
       });
 
       if (!response.ok) {
-        throw new Error(`Error fetching Mistral models: ${response.statusText}`);
+        console.warn(`Could not fetch models from Mistral API: ${response.statusText}. Using fallbacks.`);
+        return apiFallbackModels;
       }
 
       const data = await response.json();
       return data.data ? data.data.map((model: { id: string; name?: string }) => ({
         id: model.id,
         name: model.name || model.id,
-      })) : [];
+      })) : apiFallbackModels;
     } catch (error) {
-      console.error('Error fetching Mistral models:', error);
-      throw new Error('Cannot fetch Mistral models. Check your API key.');
+      console.error('Error fetching Mistral models, using fallbacks:', error);
+      return apiFallbackModels;
     }
   }
 
@@ -304,24 +335,32 @@ class CerebrasProviderClient implements LLMProviderClient {
   }
 
   async getModels() {
+    const apiFallbackModels = [
+      { id: 'llama3.1-70b', name: 'Llama 3.1 70B' },
+      { id: 'llama3.1-8b', name: 'Llama 3.1 8B' },
+    ];
+
     try {
       const apiKey = getProviderApiKey(LLMProvider.CEREBRAS, this.customApiKey);
+      if (!apiKey) return apiFallbackModels;
+
       const response = await fetch('https://api.cerebras.ai/v1/models', {
         headers: { 'Authorization': `Bearer ${apiKey}` },
       });
 
       if (!response.ok) {
-        throw new Error(`Error fetching Cerebras models: ${response.statusText}`);
+        console.warn(`Could not fetch models from Cerebras API: ${response.statusText}. Using fallbacks.`);
+        return apiFallbackModels;
       }
 
       const data = await response.json();
       return data.data ? data.data.map((model: { id: string }) => ({
         id: model.id,
         name: model.id,
-      })) : [];
+      })) : apiFallbackModels;
     } catch (error) {
-      console.error('Error fetching Cerebras models:', error);
-      throw new Error('Cannot fetch Cerebras models. Check your API key.');
+      console.error('Error fetching Cerebras models, using fallbacks:', error);
+      return apiFallbackModels;
     }
   }
 

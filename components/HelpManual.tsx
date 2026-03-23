@@ -22,6 +22,7 @@ import {
   DialogTitle, 
   DialogClose 
 } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 interface HelpManualProps {
   isOpen: boolean
