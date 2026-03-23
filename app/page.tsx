@@ -339,6 +339,11 @@ export default function Home() {
         onClose={() => setIsDeployDialogOpen(false)} 
         code={generatedCode}
       />
+
+      {/* Version Footer */}
+      <div className="fixed bottom-4 right-4 text-[10px] text-slate-500 font-mono pointer-events-none opacity-50">
+        v1.0.7-stable | AIAppsy Secure Auth
+      </div>
     </div>
   )
 }
