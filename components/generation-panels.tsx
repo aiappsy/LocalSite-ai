@@ -4,6 +4,7 @@ import { Laptop, Smartphone, Tablet, Copy, RefreshCw, Loader2, Save, ArrowRight 
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
+import { cn } from "@/lib/utils"
 import { CodeEditor } from "@/components/code-editor"
 import { WorkSteps } from "@/components/work-steps"
 
@@ -155,50 +156,70 @@ export function CodePanel({
         BOTTOM SECTION 
         Takes up 35% of the vertical space. Contains Prompt Input & Work Steps.
       */}
-            <div className="h-[35%] p-3 flex flex-col overflow-hidden">
-                {/* New Prompt Input */}
-                <div className="mb-2 flex-shrink-0">
-                    <h3 className="text-xs font-medium text-gray-400 mb-1">NEW PROMPT</h3>
-                    <div className="relative">
-                        <Textarea
-                            value={newPrompt}
-                            onChange={(e) => setNewPrompt(e.target.value)}
-                            placeholder="Enter a new prompt..."
-                            className="min-h-[60px] w-full rounded-md border border-gray-800 bg-gray-900/50 p-2 pr-10 text-sm text-gray-300 focus:border-white focus:ring-white"
-                            onKeyDown={handleKeyDown}
-                            disabled={isGenerating}
-                        />
-                        <Button
-                            size="sm"
-                            className={`absolute bottom-2 right-2 h-6 w-6 p-0 ${newPrompt.trim() ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 hover:bg-gray-700'}`}
-                            onClick={handleSendNewPrompt}
-                            disabled={!newPrompt.trim() || isGenerating}
-                        >
-                            <ArrowRight className={`h-3 w-3 ${newPrompt.trim() ? 'text-white' : 'text-gray-400'}`} />
-                            <span className="sr-only">Send</span>
-                        </Button>
-                    </div>
-
-                    {/* Previous Prompt History */}
-                    {previousPrompt && (
-                        <div className="mt-2">
-                            <h4 className="text-xs font-medium text-gray-400">PREVIOUS PROMPT:</h4>
-                            <ScrollArea className="h-12 w-full rounded-md border border-gray-800 bg-gray-900/30 p-2 mt-1">
-                                <p className="text-xs text-gray-400">{previousPrompt}</p>
-                            </ScrollArea>
+            {/* 
+        BOTTOM SECTION - HIGH FOCUS PROMPT INPUT
+        Redesigned to be the central engine of the interaction.
+      */}
+            <div className="flex-1 flex flex-col p-6 max-w-4xl mx-auto w-full space-y-6">
+                {/* New Prompt Input - The Core Interaction */}
+                <div className="flex-1 flex flex-col justify-center">
+                    <div className="relative group transition-all duration-300">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-1000 group-focus-within:duration-200"></div>
+                        <div className="relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+                            <Textarea
+                                value={newPrompt}
+                                onChange={(e) => setNewPrompt(e.target.value)}
+                                placeholder="Refine your design or add new features..."
+                                className="min-h-[120px] w-full bg-slate-900/50 border-0 p-4 pb-12 text-base text-slate-100 placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none transition-all"
+                                onKeyDown={handleKeyDown}
+                                disabled={isGenerating}
+                            />
+                            <div className="absolute bottom-3 right-3 flex items-center gap-3">
+                                {isGenerating && <Loader2 className="w-5 h-5 animate-spin text-blue-500" />}
+                                <Button
+                                    size="icon"
+                                    className={cn(
+                                        "h-10 w-10 rounded-full transition-all shadow-lg active:scale-95",
+                                        newPrompt.trim() 
+                                            ? "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/40" 
+                                            : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                                    )}
+                                    onClick={handleSendNewPrompt}
+                                    disabled={!newPrompt.trim() || isGenerating}
+                                >
+                                    <ArrowRight className="h-5 w-5" />
+                                    <span className="sr-only">Send prompt</span>
+                                </Button>
+                            </div>
                         </div>
-                    )}
+                        <p className="mt-3 text-center text-xs text-slate-500 italic">
+                            Press Enter to send. Use Shift+Enter for new line.
+                        </p>
+                    </div>
                 </div>
 
-                {/* Work Steps Visualization */}
-                <div className="flex-1 overflow-hidden">
-                    <h3 className="text-xs font-medium text-gray-400 mb-1">AI WORK STEPS</h3>
-                    <div className="h-[calc(100%-20px)] overflow-hidden">
-                        <WorkSteps
-                            isGenerating={isGenerating}
-                            generationComplete={generationComplete}
-                            generatedCode={isEditable ? editedCode : generatedCode}
-                        />
+                {/* Info & Work Steps Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
+                    {/* Previous Prompt Context */}
+                    <div className="space-y-2">
+                        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Last Instruction</h3>
+                        <div className="rounded-lg border border-slate-800 bg-slate-900/30 p-3 h-20 overflow-y-auto">
+                            <p className="text-xs text-slate-400 leading-relaxed italic">
+                                {previousPrompt || "No instructions provided yet."}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* AI Work Steps */}
+                    <div className="space-y-2">
+                        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Generation Process</h3>
+                        <div className="rounded-lg border border-slate-800 bg-slate-900/30 p-3 h-20 overflow-hidden">
+                            <WorkSteps
+                                isGenerating={isGenerating}
+                                generationComplete={generationComplete}
+                                generatedCode={isEditable ? editedCode : generatedCode}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

@@ -71,7 +71,7 @@ export function SettingsPanel({
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 border-l border-slate-800 w-80 overflow-y-auto custom-scrollbar">
+    <div className="flex flex-col h-full bg-slate-950 w-full overflow-y-auto custom-scrollbar">
       <div className="p-4 border-b border-slate-800 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
           <Settings2 className="w-4 h-4 text-blue-400" />

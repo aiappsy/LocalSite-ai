@@ -17,6 +17,15 @@ import { LoadingScreen } from "@/components/loading-screen"
 import { useCodeGeneration } from "@/hooks/use-code-generation"
 import { LLMProvider, getAvailableProviders } from "@/lib/providers/config"
 import { HelpManual } from "@/components/HelpManual"
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle,
+  SheetDescription
+} from "@/components/ui/sheet"
+import { PlusCircle, Settings2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function Home() {
   // UI State
@@ -25,6 +34,7 @@ export default function Home() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false)
   const [isHelpManualOpen, setIsHelpManualOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   
   // Model & Provider State
   const [selectedProvider, setSelectedProvider] = useState<LLMProvider>(LLMProvider.DEEPSEEK)
@@ -127,6 +137,13 @@ export default function Home() {
       customCredentials: keys
     })
   }
+  
+  const handleNewChat = () => {
+    setPrompt("")
+    setGeneratedCode("")
+    setActiveTab('home')
+    toast.success("Started a new chat")
+  }
 
   if (isLoading) return <LoadingScreen />
 
@@ -154,13 +171,15 @@ export default function Home() {
             isCollapsed={isSidebarCollapsed}
             setIsCollapsed={setIsSidebarCollapsed}
             onOpenHelp={() => setIsHelpManualOpen(true)}
+            onNewChat={handleNewChat}
+            onToggleSettings={() => setIsSettingsOpen(true)}
           />
         </ResizablePanel>
 
         <ResizableHandle withHandle className="bg-slate-800" />
 
         {/* Middle Content Area */}
-        <ResizablePanel defaultSize={60} minSize={30}>
+        <ResizablePanel defaultSize={84} minSize={30}>
           <div className="flex flex-col h-full overflow-hidden bg-slate-950">
             {activeTab === 'home' && (
               <WelcomeView 
@@ -204,23 +223,34 @@ export default function Home() {
             )}
           </div>
         </ResizablePanel>
-
-        <ResizableHandle withHandle className="bg-slate-800" />
-
-        {/* Right Settings Panel */}
-        <ResizablePanel defaultSize={24} minSize={20} maxSize={30}>
-          <SettingsPanel 
-            provider={selectedProvider}
-            model={selectedModel}
-            models={availableModels}
-            settings={modelSettings}
-            onProviderChange={setSelectedProvider}
-            onModelChange={setSelectedModel}
-            onSettingsChange={(newSettings) => setModelSettings(prev => ({ ...prev, ...newSettings }))}
-            isLoadingModels={isLoadingModels}
-          />
-        </ResizablePanel>
       </ResizablePanelGroup>
+
+      {/* Model Settings Sheet */}
+      <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <SheetContent className="w-[400px] sm:w-[540px] bg-slate-950 border-slate-800 p-0 overflow-y-auto">
+          <SheetHeader className="p-6 border-b border-slate-800">
+            <SheetTitle className="text-white flex items-center gap-2">
+              <Settings2 className="w-5 h-5 text-blue-400" />
+              Model Configuration
+            </SheetTitle>
+            <SheetDescription className="text-slate-400">
+              Fine-tune the AI model parameters for your project.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="p-0">
+            <SettingsPanel 
+              provider={selectedProvider}
+              model={selectedModel}
+              models={availableModels}
+              settings={modelSettings}
+              onProviderChange={setSelectedProvider}
+              onModelChange={setSelectedModel}
+              onSettingsChange={(newSettings) => setModelSettings(prev => ({ ...prev, ...newSettings }))}
+              isLoadingModels={isLoadingModels}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

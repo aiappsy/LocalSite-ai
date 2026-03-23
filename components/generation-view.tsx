@@ -226,55 +226,39 @@ export function GenerationView({
         </div>
       )}
 
-      {/* Mobile Tab-Navigation */}
-      <div className="md:hidden flex border-b border-gray-800 bg-gray-900/50">
+      {/* Tab-Navigation - Unified for Desktop & Mobile */}
+      <div className="flex border-b border-white/5 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-20">
         <button
-          className={`flex-1 py-2 text-sm font-medium ${activeTab === "code" ? "text-white border-b-2 border-white" : "text-gray-400"
-            }`}
+          className={`flex-1 py-3 text-xs font-bold tracking-widest transition-all duration-300 ${activeTab === "code" 
+            ? "text-blue-400 border-b-2 border-blue-500 bg-blue-500/5" 
+            : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+          }`}
           onClick={() => setActiveTab("code")}
         >
           CODE
         </button>
         <button
-          className={`flex-1 py-2 text-sm font-medium ${activeTab === "preview" ? "text-white border-b-2 border-white" : "text-gray-400"
-            }`}
+          className={`flex-1 py-3 text-xs font-bold tracking-widest transition-all duration-300 ${activeTab === "preview" 
+            ? "text-blue-400 border-b-2 border-blue-500 bg-blue-500/5" 
+            : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+          }`}
           onClick={() => setActiveTab("preview")}
         >
           PREVIEW
         </button>
       </div>
 
-      {/* Hauptinhalt - Flexibler und responsiver mit Resizable Panels */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Mobile View */}
-        <div className="md:hidden w-full flex flex-col">
-          {activeTab === "code" ? (
+      {/* Main Content - Unified Tabbed View */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {activeTab === "code" ? (
+          <div className="w-full h-full animate-in fade-in slide-in-from-left-4 duration-300">
             <CodePanel {...codePanelProps} />
-          ) : (
+          </div>
+        ) : (
+          <div className="w-full h-full animate-in fade-in slide-in-from-right-4 duration-300">
             <PreviewPanel {...previewPanelProps} />
-          )}
-        </div>
-
-        {/* Desktop View - Resizable Panels */}
-        <div className="hidden md:block w-full h-full">
-          <ResizablePanelGroup
-            direction="horizontal"
-            className="w-full h-full"
-          >
-            {/* Linke Spalte - Code-Editor und Steuerelemente */}
-            <ResizablePanel defaultSize={65} minSize={30}>
-              <CodePanel {...codePanelProps} />
-            </ResizablePanel>
-
-            {/* Resizable Handle */}
-            <ResizableHandle withHandle className="bg-gray-800 hover:bg-gray-700" />
-
-            {/* Rechte Spalte - Live-Vorschau */}
-            <ResizablePanel defaultSize={35} minSize={25}>
-              <PreviewPanel {...previewPanelProps} />
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Speichern-Dialog */}
