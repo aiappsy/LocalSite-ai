@@ -146,7 +146,14 @@ export function useCodeGeneration() {
 
                         if (part.type === 'text') {
                             codeBuffer += part.content
-                            setGeneratedCode(codeBuffer.replace(/^```html\n/, '').replace(/```$/, ''))
+                            // Robust extraction: try to find <!DOCTYPE html> ... </html>
+                            const htmlMatch = codeBuffer.match(/<!DOCTYPE html>[\s\S]*?<\/html>/i);
+                            if (htmlMatch) {
+                                setGeneratedCode(htmlMatch[0]);
+                            } else {
+                                // Fallback: strip markdown if present
+                                setGeneratedCode(codeBuffer.replace(/^```html\n/, '').replace(/```$/, '').trim());
+                            }
                         } else if (part.type === 'reasoning') {
                             if (!hasReceivedReasoning) {
                                 setIsThinking(true)

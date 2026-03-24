@@ -203,6 +203,7 @@ export default function Home() {
     if (overridePersona) setSelectedPersona(overridePersona as any)
     
     const targetPrompt = overridePrompt || prompt
+    const finalPrompt = `${targetPrompt}\n\nSTRICTLY ONLY output raw HTML code. Do NOT use markdown code blocks. Start with <!DOCTYPE html>.`
     const targetPersona = overridePersona || selectedPersona
 
     if (!targetPrompt.trim()) {
@@ -213,7 +214,7 @@ export default function Home() {
     setActiveTab('chat')
     
     await generateCode({
-      prompt: targetPrompt,
+      prompt: finalPrompt,
       model: selectedModel || (availableModels.length > 0 ? availableModels[0].id : ""),
       provider: selectedProvider,
       systemPromptType: systemPrompt ? 'custom' : targetPersona === 'copywriter' ? 'copywriting' : targetPersona === 'thinking' ? 'thinking' : 'default',
