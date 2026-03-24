@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Laptop, Smartphone, Tablet, Copy, RefreshCw, Loader2, Save, ArrowRight, Globe, Paperclip, X, Image as ImageIcon, AlertTriangle, Share2 } from "lucide-react"
+import { Laptop, Smartphone, Tablet, Copy, RefreshCw, Loader2, Save, ArrowRight, Globe, Paperclip, X, Image as ImageIcon, AlertTriangle, Share2, Brain } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -44,6 +44,8 @@ interface CodePanelProps {
     setAttachedFiles: (files: File[]) => void
     model: string
     onDeploy?: () => void
+    selectedPersona: "developer" | "copywriter" | "thinking"
+    onPersonaChange: (persona: "developer" | "copywriter" | "thinking") => void
 }
 
 interface PreviewPanelProps {
@@ -88,7 +90,9 @@ export function CodePanel({
     attachedFiles,
     setAttachedFiles,
     model,
-    onDeploy
+    onDeploy,
+    selectedPersona,
+    onPersonaChange
 }: CodePanelProps) {
 
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -239,6 +243,23 @@ export function CodePanel({
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
+                                                className={cn(
+                                                    "h-8 w-8 p-0 rounded-lg transition-all ml-1",
+                                                    selectedPersona === 'thinking' ? "text-purple-400 bg-purple-400/10" : "text-slate-500 hover:text-slate-300"
+                                                )}
+                                                onClick={() => onPersonaChange(selectedPersona === 'thinking' ? 'developer' : 'thinking')}
+                                            >
+                                                <Brain className={cn("h-4 w-4", selectedPersona === 'thinking' && "animate-pulse")} />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top">Deep Reasoning (Thinking) {selectedPersona === 'thinking' ? 'ON' : 'OFF'}</TooltipContent>
+                                    </Tooltip>
+
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
                                                 className="px-3 text-slate-500 hover:text-slate-300 rounded-lg gap-2"
                                                 onClick={() => fileInputRef.current?.click()}
                                             >
@@ -380,7 +401,35 @@ export function PreviewPanel({
     // Inline Edit Script Injection
     // -----------------------------------------------------------------------------
     const getEnhancedPreviewContent = () => {
-        if (!isLiveEditEnabled) return previewContent;
+        const navBlockerScript = `
+            <script id="nav-blocker">
+                (function() {
+                    document.addEventListener('click', (e) => {
+                        const link = e.target.closest('a');
+                        if (link) {
+                            const href = link.getAttribute('href');
+                            if (href && (href.startsWith('/') || href === '#' || (!href.startsWith('http') && !href.startsWith('mailto') && !href.startsWith('tel')))) {
+                                e.preventDefault();
+                                console.log('Navigation blocked in preview:', href);
+                            }
+                        }
+                    }, true);
+                    document.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        console.log('Form submission blocked in preview');
+                    }, true);
+                })();
+            <\/script>
+        `;
+
+        let content = previewContent;
+        if (content.includes('</body>')) {
+            content = content.replace('</body>', `${navBlockerScript}</body>`);
+        } else {
+            content = `${content}${navBlockerScript}`;
+        }
+
+        if (!isLiveEditEnabled) return content;
 
         const liveEditScript = `
             <style id="live-edit-style">
@@ -393,7 +442,6 @@ export function PreviewPanel({
                     document.body.addEventListener('click', (e) => {
                         const target = e.target.closest('p, h1, h2, h3, h4, h5, h6, span, button, a, li');
                         if (target) {
-                            e.preventDefault();
                             if (activeElement === target) return;
                             if (activeElement) {
                                 activeElement.contentEditable = "false";
@@ -406,12 +454,12 @@ export function PreviewPanel({
                         }
                     });
                     document.body.addEventListener('input', (e) => {
-                        // Clean up before sending back to avoid saving editor states
                         const cleanHtml = document.documentElement.outerHTML
                             .replace(/ contenteditable="true"/g, '')
                             .replace(/ live-edit-active/g, '')
                             .replace(/<style id="live-edit-style">.*?<\\/style>/s, '')
-                            .replace(/<script id="live-edit-script">.*?<\\/script>/s, '');
+                            .replace(/<script id="live-edit-script">.*?<\\/script>/s, '')
+                            .replace(/<script id="nav-blocker">.*?<\\/script>/s, '');
                         
                         window.parent.postMessage({
                             type: 'LIVE_EDIT_CHANGE',
@@ -422,10 +470,10 @@ export function PreviewPanel({
             <\/script>
         `;
 
-        if (previewContent.includes('</body>')) {
-            return previewContent.replace('</body>', `${liveEditScript}</body>`);
+        if (content.includes('</body>')) {
+            return content.replace('</body>', `${liveEditScript}</body>`);
         }
-        return `${previewContent}${liveEditScript}`;
+        return `${content}${liveEditScript}`;
     };
 
     const finalContent = getEnhancedPreviewContent();

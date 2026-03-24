@@ -38,6 +38,8 @@ interface GenerationViewProps {
   attachedFiles: File[]
   setAttachedFiles: (files: File[]) => void
   onDeploy: () => void
+  selectedPersona: "developer" | "copywriter" | "thinking"
+  onPersonaChange: (persona: "developer" | "copywriter" | "thinking") => void
 }
 
 export function GenerationView({
@@ -55,7 +57,9 @@ export function GenerationView({
   setIsSearchEnabled,
   attachedFiles,
   setAttachedFiles,
-  onDeploy
+  onDeploy,
+  selectedPersona,
+  onPersonaChange
 }: GenerationViewProps) {
   const [viewportSize, setViewportSize] = useState<"desktop" | "tablet" | "mobile">("desktop")
   const [copySuccess, setCopySuccess] = useState(false)
@@ -230,7 +234,9 @@ export function GenerationView({
     attachedFiles,
     setAttachedFiles,
     model,
-    onDeploy
+    onDeploy,
+    selectedPersona,
+    onPersonaChange
   }
 
   const previewPanelProps = {

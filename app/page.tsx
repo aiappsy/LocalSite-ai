@@ -311,6 +311,8 @@ export default function Home() {
                     attachedFiles={attachedFiles}
                     setAttachedFiles={setAttachedFiles}
                     onDeploy={() => setIsDeployDialogOpen(true)}
+                    selectedPersona={selectedPersona}
+                    onPersonaChange={setSelectedPersona}
                   />
                 </div>
               </div>
