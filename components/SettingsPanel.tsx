@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Badge } from "@/components/ui/badge";
 import { 
   Settings2, 
   Info, 
@@ -69,6 +70,8 @@ interface SettingsPanelProps {
   onSettingsChange: (settings: Partial<ModelSettings>) => void;
   systemPrompt: string;
   onSystemPromptChange: (value: string) => void;
+  selectedPersona: "developer" | "copywriter" | "thinking";
+  onPersonaChange: (persona: "developer" | "copywriter" | "thinking") => void;
   isLoadingModels?: boolean;
 }
 
@@ -82,6 +85,8 @@ export function SettingsPanel({
   onSettingsChange,
   systemPrompt,
   onSystemPromptChange,
+  selectedPersona,
+  onPersonaChange,
   isLoadingModels
 }: SettingsPanelProps) {
   const { keys, saveKey } = useKeysManager();
@@ -298,7 +303,44 @@ export function SettingsPanel({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider font-mono">
-                    Instruction Set
+                    Agent Persona
+                  </Label>
+                </div>
+                <Select value={selectedPersona} onValueChange={(val) => onPersonaChange(val as any)}>
+                  <SelectTrigger className="bg-slate-900 border-slate-800 text-xs h-10 shadow-inner">
+                    <SelectValue placeholder="Select persona" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-800 border-blue-900/20">
+                    <SelectItem value="developer" className="text-xs cursor-pointer focus:bg-blue-600/10">
+                      <div className="flex items-center gap-2">
+                        <Cpu className="w-3.5 h-3.5 text-blue-400" />
+                        <span className="font-medium">Innovative Developer</span>
+                        <Badge variant="outline" className="text-[8px] h-3 px-1 border-blue-900/50 text-blue-500 uppercase">Default</Badge>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="copywriter" className="text-xs cursor-pointer focus:bg-purple-600/10">
+                      <div className="flex items-center gap-2">
+                        <Wand2 className="w-3.5 h-3.5 text-purple-400" />
+                        <span className="font-medium">Expert Copywriter</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="thinking" className="text-xs cursor-pointer focus:bg-amber-600/10">
+                      <div className="flex items-center gap-2">
+                        <FlaskConical className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="font-medium">Deep Reasoning</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-slate-500 italic">
+                  Switching personas changes the AI's core logic and creative focus.
+                </p>
+              </div>
+
+              <div className="space-y-3 pt-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider font-mono">
+                    System Instructions
                   </Label>
                 </div>
                 <textarea

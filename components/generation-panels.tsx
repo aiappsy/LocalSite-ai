@@ -57,6 +57,8 @@ interface PreviewPanelProps {
     previewKey: number
     previewContent: string
     onDeploy?: () => void
+    isLiveEditEnabled: boolean
+    setIsLiveEditEnabled: (value: boolean) => void
 }
 
 // -----------------------------------------------------------------------------
@@ -359,10 +361,6 @@ export function CodePanel({
     )
 }
 
-// -----------------------------------------------------------------------------
-// Preview Panel Component
-// -----------------------------------------------------------------------------
-
 export function PreviewPanel({
     generationComplete,
     refreshPreview,
@@ -373,8 +371,64 @@ export function PreviewPanel({
     isGenerating,
     previewKey,
     previewContent,
-    onDeploy
+    onDeploy,
+    isLiveEditEnabled,
+    setIsLiveEditEnabled
 }: PreviewPanelProps) {
+
+    // -----------------------------------------------------------------------------
+    // Inline Edit Script Injection
+    // -----------------------------------------------------------------------------
+    const getEnhancedPreviewContent = () => {
+        if (!isLiveEditEnabled) return previewContent;
+
+        const liveEditScript = `
+            <style id="live-edit-style">
+                .live-edit-active { outline: 2px dashed #3b82f6 !important; outline-offset: 4px; border-radius: 4px; transition: outline 0.2s ease; cursor: text !important; }
+                [contenteditable="true"]:focus { outline: 2px solid #3b82f6 !important; }
+            </style>
+            <script id="live-edit-script">
+                (function() {
+                    let activeElement = null;
+                    document.body.addEventListener('click', (e) => {
+                        const target = e.target.closest('p, h1, h2, h3, h4, h5, h6, span, button, a, li');
+                        if (target) {
+                            e.preventDefault();
+                            if (activeElement === target) return;
+                            if (activeElement) {
+                                activeElement.contentEditable = "false";
+                                activeElement.classList.remove('live-edit-active');
+                            }
+                            activeElement = target;
+                            target.contentEditable = "true";
+                            target.classList.add('live-edit-active');
+                            target.focus();
+                        }
+                    });
+                    document.body.addEventListener('input', (e) => {
+                        // Clean up before sending back to avoid saving editor states
+                        const cleanHtml = document.documentElement.outerHTML
+                            .replace(/ contenteditable="true"/g, '')
+                            .replace(/ live-edit-active/g, '')
+                            .replace(/<style id="live-edit-style">.*?<\\/style>/s, '')
+                            .replace(/<script id="live-edit-script">.*?<\\/script>/s, '');
+                        
+                        window.parent.postMessage({
+                            type: 'LIVE_EDIT_CHANGE',
+                            content: cleanHtml
+                        }, '*');
+                    });
+                })();
+            <\/script>
+        `;
+
+        if (previewContent.includes('</body>')) {
+            return previewContent.replace('</body>', `${liveEditScript}</body>`);
+        }
+        return `${previewContent}${liveEditScript}`;
+    };
+
+    const finalContent = getEnhancedPreviewContent();
 
     // Calculate responsive width for the iframe container
     const iframeWidthClass =
@@ -426,6 +480,17 @@ export function PreviewPanel({
                         <Smartphone className="w-4 h-4" />
                     </Button>
                     <div className="mx-2 w-[1px] h-4 bg-gray-800" />
+                    <div className="flex items-center space-x-2 mr-2">
+                        <span className={cn("text-[10px] font-bold uppercase tracking-wider transition-colors", isLiveEditEnabled ? "text-blue-400" : "text-slate-500")}>
+                            {isLiveEditEnabled ? "Live Edit ON" : "Live Edit"}
+                        </span>
+                        <Switch
+                            checked={isLiveEditEnabled}
+                            onCheckedChange={setIsLiveEditEnabled}
+                            disabled={!generationComplete || isGenerating}
+                            className="scale-75 data-[state=checked]:bg-blue-600"
+                        />
+                    </div>
                     <Button
                         variant="default"
                         size="sm"
@@ -459,10 +524,10 @@ export function PreviewPanel({
                         <div className="w-full h-full relative">
                             <iframe
                                 key={previewKey}
-                                srcDoc={previewContent}
+                                srcDoc={finalContent}
                                 className="w-full h-full absolute inset-0 z-10"
                                 title="Preview"
-                                sandbox="allow-scripts"
+                                sandbox="allow-scripts allow-same-origin"
                                 style={{
                                     backgroundColor: '#121212',
                                     opacity: 1,

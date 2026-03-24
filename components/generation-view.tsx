@@ -68,6 +68,7 @@ export function GenerationView({
   const [previewContent, setPreviewContent] = useState("")
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [newPrompt, setNewPrompt] = useState("")
+  const [isLiveEditEnabled, setIsLiveEditEnabled] = useState(false)
 
   const prevContentRef = useRef<string>("");
 
@@ -135,6 +136,21 @@ export function GenerationView({
       debouncedUpdatePreview(generatedCode);
     }
   }, [generatedCode, debouncedUpdatePreview])
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'LIVE_EDIT_CHANGE') {
+        const newCode = event.data.content;
+        if (newCode && newCode !== editedCode) {
+          setIsEditable(true); // Automatically enable edit mode if a live change occurs
+          setEditedCode(newCode);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [editedCode]);
 
   useEffect(() => {
     if (editedCode !== originalCode) {
@@ -227,7 +243,9 @@ export function GenerationView({
     isGenerating,
     previewKey,
     previewContent,
-    onDeploy
+    onDeploy,
+    isLiveEditEnabled,
+    setIsLiveEditEnabled
   }
 
   return (

@@ -66,6 +66,7 @@ export default function Home() {
   // New Feature State
   const [isSearchEnabled, setIsSearchEnabled] = useState(false)
   const [attachedFiles, setAttachedFiles] = useState<File[]>([])
+  const [selectedPersona, setSelectedPersona] = useState<"developer" | "copywriter" | "thinking">("developer")
 
   const { keys } = useKeysManager()
   const {
@@ -89,6 +90,7 @@ export default function Home() {
           if (data.modelSettings) setModelSettings(data.modelSettings);
           if (data.systemPrompt) setSystemPrompt(data.systemPrompt);
           if (data.selectedProvider) setSelectedProvider(data.selectedProvider);
+          if (data.selectedPersona) setSelectedPersona(data.selectedPersona);
         }
       });
 
@@ -118,6 +120,7 @@ export default function Home() {
           modelSettings,
           systemPrompt,
           selectedProvider,
+          selectedPersona,
           updatedAt: new Date().toISOString()
         }, { merge: true });
         console.log("Settings synced to cloud");
@@ -128,7 +131,7 @@ export default function Home() {
 
     syncToCloud();
     return () => syncToCloud.cancel();
-  }, [user, modelSettings, systemPrompt, selectedProvider, isLoading]);
+  }, [user, modelSettings, systemPrompt, selectedProvider, selectedPersona, isLoading]);
 
   // 3. Cloud Persistence (Latest Generation)
   useEffect(() => {
@@ -195,8 +198,10 @@ export default function Home() {
     }
   }, [selectedProvider, keys])
 
-  const handleGenerate = async (overridePrompt?: string) => {
+  const handleGenerate = async (overridePrompt?: string, overridePersona?: string) => {
     const targetPrompt = overridePrompt || prompt
+    const targetPersona = overridePersona || selectedPersona
+
     if (!targetPrompt.trim()) {
       toast.error("Please enter a prompt")
       return
@@ -208,7 +213,7 @@ export default function Home() {
       prompt: targetPrompt,
       model: selectedModel,
       provider: selectedProvider,
-      systemPromptType: systemPrompt ? 'custom' : 'default',
+      systemPromptType: systemPrompt ? 'custom' : targetPersona === 'copywriter' ? 'copywriting' : targetPersona === 'thinking' ? 'thinking' : 'default',
       customSystemPrompt: systemPrompt,
       temperature: modelSettings.temperature,
       topP: modelSettings.topP,
@@ -330,6 +335,8 @@ export default function Home() {
               onSettingsChange={(newSettings) => setModelSettings(prev => ({ ...prev, ...newSettings }))}
               systemPrompt={systemPrompt}
               onSystemPromptChange={setSystemPrompt}
+              selectedPersona={selectedPersona}
+              onPersonaChange={setSelectedPersona}
               isLoadingModels={isLoadingModels}
             />
           </div>

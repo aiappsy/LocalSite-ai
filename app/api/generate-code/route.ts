@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { LLMProvider } from '@/lib/providers/config';
 import { generateCodeStream } from '@/lib/providers/provider';
-import { DEFAULT_SYSTEM_PROMPT, THINKING_SYSTEM_PROMPT } from '@/lib/providers/prompts';
+import { DEFAULT_SYSTEM_PROMPT, THINKING_SYSTEM_PROMPT, COPYWRITING_SYSTEM_PROMPT } from '@/lib/providers/prompts';
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,6 +51,8 @@ export async function POST(request: NextRequest) {
     if (!finalSystemPrompt) {
       if (systemPromptType === 'thinking') {
         finalSystemPrompt = THINKING_SYSTEM_PROMPT;
+      } else if (systemPromptType === 'copywriting') {
+        finalSystemPrompt = COPYWRITING_SYSTEM_PROMPT;
       } else {
         // Fallback to default
         finalSystemPrompt = DEFAULT_SYSTEM_PROMPT;
