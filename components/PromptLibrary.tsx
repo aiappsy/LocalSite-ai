@@ -147,8 +147,9 @@ export function PromptLibrary({ onSelect }: PromptLibraryProps) {
           return (
             <div 
               key={prompt.id}
+              onClick={() => onSelect(prompt.content)}
               className={cn(
-                "group relative bg-slate-900/40 border border-slate-800 rounded-2xl p-5 hover:bg-slate-900 transition-all duration-300 flex flex-col h-full overflow-hidden",
+                "group relative bg-slate-900/40 border border-slate-800 rounded-2xl p-5 hover:bg-slate-900 transition-all duration-300 flex flex-col h-full overflow-hidden cursor-pointer",
                 styles.hoverBorder
               )}
             >

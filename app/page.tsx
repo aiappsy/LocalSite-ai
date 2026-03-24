@@ -199,6 +199,9 @@ export default function Home() {
   }, [selectedProvider, keys])
 
   const handleGenerate = async (overridePrompt?: string, overridePersona?: string) => {
+    if (overridePrompt) setPrompt(overridePrompt)
+    if (overridePersona) setSelectedPersona(overridePersona as any)
+    
     const targetPrompt = overridePrompt || prompt
     const targetPersona = overridePersona || selectedPersona
 
@@ -211,7 +214,7 @@ export default function Home() {
     
     await generateCode({
       prompt: targetPrompt,
-      model: selectedModel,
+      model: selectedModel || (availableModels.length > 0 ? availableModels[0].id : ""),
       provider: selectedProvider,
       systemPromptType: systemPrompt ? 'custom' : targetPersona === 'copywriter' ? 'copywriting' : targetPersona === 'thinking' ? 'thinking' : 'default',
       customSystemPrompt: systemPrompt,
