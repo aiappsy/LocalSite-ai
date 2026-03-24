@@ -12,6 +12,7 @@ import { KeysManager, useKeysManager } from "@/components/KeysManager"
 import { WelcomeView } from "@/components/welcome-view"
 import { GenerationView } from "@/components/generation-view"
 import { DeployDialog } from "@/components/DeployDialog"
+import { PromptLibrary } from "@/components/PromptLibrary"
 import { LoadingScreen } from "@/components/loading-screen"
 import { useCodeGeneration } from "@/hooks/use-code-generation"
 import { LLMProvider, getAvailableProviders } from "@/lib/providers/config"
@@ -300,9 +301,7 @@ export default function Home() {
 
             
             {activeTab === 'prompts' && (
-              <div className="flex items-center justify-center h-full text-slate-500">
-                <p>Prompt Library coming soon...</p>
-              </div>
+              <PromptLibrary onSelect={handleGenerate} />
             )}
           </div>
         </ResizablePanel>

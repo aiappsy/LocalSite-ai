@@ -84,7 +84,7 @@ export function SystemInstructions({
             <Textarea
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="e.g. You are a helpful assistant that writes clean, modern React code using Tailwind CSS..."
+              placeholder="e.g. You are a world-class innovative web development agent. Create a premium, responsive interface with modern HSL colors, smooth animations, and glassmorphism styling..."
               className="min-h-[120px] bg-slate-950 border-slate-700 focus-visible:ring-blue-600 text-sm py-3 px-4 leading-relaxed"
             />
             <div className="absolute right-3 bottom-3 flex items-center gap-1 text-[10px] text-slate-500">
