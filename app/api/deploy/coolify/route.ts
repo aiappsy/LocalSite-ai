@@ -9,21 +9,28 @@ export async function POST(req: NextRequest) {
     let { instanceUrl, token, endpoint, method = 'GET', data } = body;
 
     // Use environment variables as fallback
-    instanceUrl = instanceUrl || process.env.COOLIFY_URL;
-    token = token || process.env.COOLIFY_TOKEN;
+    const finalUrl = instanceUrl || process.env.COOLIFY_URL;
+    const finalToken = token || process.env.COOLIFY_TOKEN;
 
-    if (!instanceUrl || !token || !endpoint) {
-      return NextResponse.json({ error: 'Missing required parameters (Instance URL or Token)' }, { status: 400 });
+    if (!finalUrl) {
+      return NextResponse.json({ error: 'Missing Instance URL (check .env.local)' }, { status: 400 });
+    }
+    if (!finalToken) {
+      return NextResponse.json({ error: 'Missing API Token (check .env.local)' }, { status: 400 });
+    }
+    if (!endpoint) {
+      return NextResponse.json({ error: 'Missing API endpoint' }, { status: 400 });
     }
 
-    // Ensure URL is clean
-    const baseUrl = instanceUrl.replace(/\/$/, '');
+    const baseUrl = finalUrl.replace(/\/$/, '');
     const targetUrl = `${baseUrl}/api/v1${endpoint}`;
+
+    console.log(`Coolify Proxy: ${method} ${targetUrl}`);
 
     const response = await fetch(targetUrl, {
       method,
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${finalToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
@@ -36,7 +43,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(result, { status: response.status });
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json({ 
+      data: result, 
+      usingServerToken: !token && !!process.env.COOLIFY_TOKEN 
+    });
   } catch (error: any) {
     console.error('Coolify Proxy Error:', error);
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });

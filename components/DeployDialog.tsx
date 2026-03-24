@@ -50,19 +50,20 @@ export function DeployDialog({ isOpen, onClose, code }: DeployDialogProps) {
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [projectName, setProjectName] = useState("WebCrafter Project");
   const [isValidating, setIsValidating] = useState(false);
+  const [isUsingServerToken, setIsUsingServerToken] = useState(false);
 
   // Persistence: Load settings on mount
   React.useEffect(() => {
     if (isOpen) {
       const savedUrl = localStorage.getItem('coolify-url');
       const savedToken = localStorage.getItem('coolify-token');
+      
       if (savedUrl) setCoolifyUrl(savedUrl);
-      if (savedToken) {
-        setCoolifyToken(savedToken);
-      // Auto-validate if URL exists (token might be on server)
-      if (savedUrl && !projects.length) {
-        validateConnection(savedUrl, savedToken || "");
-      }
+      if (savedToken) setCoolifyToken(savedToken);
+      
+      // Auto-validate if have enough info or if we should check server secrets
+      if (!projects.length) {
+        validateConnection(savedUrl || coolifyUrl, savedToken || "");
       }
     }
   }, [isOpen]);
@@ -95,10 +96,13 @@ export function DeployDialog({ isOpen, onClose, code }: DeployDialogProps) {
         })
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to connect');
+      const responseData = await response.json();
+      if (!response.ok) throw new Error(responseData.error || 'Failed to connect');
 
+      const { data, usingServerToken } = responseData;
       setProjects(data);
+      setIsUsingServerToken(usingServerToken);
+
       if (data.length > 0) {
         const lastProject = localStorage.getItem('coolify-last-project');
         const exists = data.find((p: any) => p.uuid === lastProject);
@@ -267,6 +271,12 @@ export function DeployDialog({ isOpen, onClose, code }: DeployDialogProps) {
                       Help <ExternalLink className="w-2.5 h-2.5" />
                     </a>
                   </div>
+                  {isUsingServerToken && !coolifyToken && (
+                    <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-blue-500/5 border border-blue-500/10">
+                      <ShieldCheck className="w-3 h-3 text-blue-400" />
+                      <span className="text-[10px] text-blue-400 font-medium tracking-tight">Active: Secure Server-Side Token</span>
+                    </div>
+                  )}
                 </div>
 
                 {projects.length > 0 && (
