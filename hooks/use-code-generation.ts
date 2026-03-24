@@ -22,13 +22,25 @@ interface StreamPart {
     content: string
 }
 
+const DESIGN_EXCELLENCE_SUFFIX = `
+
+## ELITE DESIGN ENFORCEMENT
+- Use Tailwind CSS v3 (Play CDN) for all styling.
+- Use GSAP (CDN) for entrance and scroll animations.
+- Use Lucide Icons (CDN) with lucide.createIcons() initialization.
+- Implement a 'Bento Box' or 'Glassmorphism' layout.
+- Use premium Google Fonts (Outfit, Playfair Display).
+- Ensure 100% mobile responsiveness.
+- STRICTLY ONLY output raw HTML. No markdown code blocks.
+`;
+
 export function useCodeGeneration() {
     const [generatedCode, setGeneratedCode] = useState("")
     const [isGenerating, setIsGenerating] = useState(false)
     const [generationComplete, setGenerationComplete] = useState(false)
     const [thinkingOutput, setThinkingOutput] = useState("")
     const [isThinking, setIsThinking] = useState(false)
-
+    
     const generateCode = async ({
         prompt,
         model,
@@ -47,6 +59,8 @@ export function useCodeGeneration() {
             toast.error("Please enter a prompt and select a provider and model.")
             return
         }
+
+        const finalPrompt = `${prompt}\n\n${DESIGN_EXCELLENCE_SUFFIX}`;
 
         setIsGenerating(true)
         setGeneratedCode("")
@@ -86,7 +100,7 @@ export function useCodeGeneration() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    prompt,
+                    prompt: finalPrompt,
                     model,
                     provider,
                     maxTokens,

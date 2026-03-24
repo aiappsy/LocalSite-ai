@@ -13,7 +13,9 @@ import {
   Globe, 
   Cpu,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Shield,
+  Layout
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,34 +25,35 @@ export interface PromptItem {
   title: string;
   niche: string;
   icon: any;
-  color: 'blue' | 'purple' | 'amber' | 'emerald' | 'rose' | 'orange' | 'indigo' | 'cyan' | 'sky' | 'violet';
+  color: 'blue' | 'purple' | 'amber' | 'emerald' | 'rose' | 'orange' | 'indigo' | 'cyan' | 'sky' | 'violet' | 'fuchsia';
   content: string;
 }
 
 const colorMap = {
-  blue: { bg: 'bg-blue-500/10', text: 'text-blue-400', glow: 'bg-blue-500', hoverBorder: 'hover:border-blue-500/50' },
-  purple: { bg: 'bg-purple-500/10', text: 'text-purple-400', glow: 'bg-purple-500', hoverBorder: 'hover:border-purple-500/50' },
-  amber: { bg: 'bg-amber-500/10', text: 'text-amber-400', glow: 'bg-amber-500', hoverBorder: 'hover:border-amber-500/50' },
-  emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', glow: 'bg-emerald-500', hoverBorder: 'hover:border-emerald-500/50' },
-  rose: { bg: 'bg-rose-500/10', text: 'text-rose-400', glow: 'bg-rose-500', hoverBorder: 'hover:border-rose-500/50' },
-  orange: { bg: 'bg-orange-500/10', text: 'text-orange-400', glow: 'bg-orange-500', hoverBorder: 'hover:border-orange-500/50' },
-  indigo: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', glow: 'bg-indigo-500', hoverBorder: 'hover:border-indigo-500/50' },
-  cyan: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', glow: 'bg-cyan-500', hoverBorder: 'hover:border-cyan-500/50' },
-  sky: { bg: 'bg-sky-500/10', text: 'text-sky-400', glow: 'bg-sky-500', hoverBorder: 'hover:border-sky-500/50' },
-  violet: { bg: 'bg-violet-500/10', text: 'text-violet-400', glow: 'bg-violet-500', hoverBorder: 'hover:border-violet-500/50' },
+  blue: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20', hoverBorder: 'hover:border-blue-400/50', glow: 'bg-blue-500/10' },
+  purple: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20', hoverBorder: 'hover:border-purple-400/50', glow: 'bg-purple-500/10' },
+  amber: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20', hoverBorder: 'hover:border-amber-400/50', glow: 'bg-amber-500/10' },
+  emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', hoverBorder: 'hover:border-emerald-400/50', glow: 'bg-emerald-500/10' },
+  rose: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20', hoverBorder: 'hover:border-rose-400/50', glow: 'bg-rose-500/10' },
+  orange: { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/20', hoverBorder: 'hover:border-orange-400/50', glow: 'bg-orange-500/10' },
+  indigo: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/20', hoverBorder: 'hover:border-indigo-400/50', glow: 'bg-indigo-500/10' },
+  cyan: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/20', hoverBorder: 'hover:border-cyan-400/50', glow: 'bg-cyan-500/10' },
+  sky: { bg: 'bg-sky-500/10', text: 'text-sky-400', border: 'border-sky-500/20', hoverBorder: 'hover:border-sky-400/50', glow: 'bg-sky-500/10' },
+  violet: { bg: 'bg-violet-500/10', text: 'text-violet-400', border: 'border-violet-500/20', hoverBorder: 'hover:border-violet-400/50', glow: 'bg-violet-500/10' },
+  fuchsia: { bg: 'bg-fuchsia-500/10', text: 'text-fuchsia-400', border: 'border-fuchsia-500/20', hoverBorder: 'hover:border-fuchsia-400/50', glow: 'bg-fuchsia-500/10' },
 };
 
 const PROMPTS: PromptItem[] = [
   {
-    id: 'fintech',
-    title: 'Fintech Dashboard',
-    niche: 'SaaS / Finance',
+    id: 'fintech-dashboard',
+    title: 'Neo-Bank Dashboard',
+    niche: 'FinTech',
     icon: Zap,
     color: 'blue',
-    content: "Create a premium, dark-themed analytics dashboard for a fintech SaaS. Features: Glassmorphism cards with subtle backdrop-blur, interactive SVG line charts for 'Revenue Growth', a 'Recent Transactions' list with micro-animations on hover, and a sleek sidebar with active states. Use a palette of Deep Slate and Electric Blue accents."
+    content: "Build a high-fidelity Neo-Bank interface. Aesthetic: 'Clean & Trustworthy' with soft white/slate-50 backgrounds and emerald-400 accents. Features: A Bento-style dashboard grid, real-time SVG line charts for 'Spending Habits', a sleek glassmorphism sidebar, and GSAP-staggered card reveals on load."
   },
   {
-    id: 'ai-tech',
+    id: 'ai-model-explorer',
     title: 'AI Model Explorer',
     niche: 'AI / Technology',
     icon: Cpu,
@@ -58,15 +61,15 @@ const PROMPTS: PromptItem[] = [
     content: "Design an innovative AI model explorer interface. Include a terminal-style console for real-time logs, an interactive 3D-effect neural network visualization using CSS/SVG, and a 'Model Settings' panel with HSL-accented glass sliders. The aesthetic should be 'Cyberpunk Minimalist' with neon purple highlights."
   },
   {
-    id: 'luxury-fashion',
-    title: 'Luxury Fashion Store',
-    niche: 'E-commerce',
+    id: 'luxury-ecommerce',
+    title: 'Luxury Boutique Store',
+    niche: 'E-Commerce',
     icon: ShoppingBag,
     color: 'amber',
-    content: "Build a high-end luxury fashion store landing page. Use large, high-resolution image placeholders, Serif typography (Outfit/Playfair Display) via Google Fonts, and 'reveal on scroll' entrance animations. Implement a minimalist navigation that stays fixed on scroll and a smooth quick-view modal for products."
+    content: "Create an ultra-premium boutique e-commerce landing page. Aesthetic: 'Modern Elegance' with serif typography (Playfair Display) and a 'Champagne & Charcoal' HSL palette. Features: Parallax product reveals, a sliding cart drawer with backdrop-blur-xl, and high-end image hover animations using GSAP and mask-expansion."
   },
   {
-    id: 'real-estate',
+    id: 'architectural-portfolio',
     title: 'Architectural Portfolio',
     niche: 'Real Estate',
     icon: Home,
@@ -74,7 +77,7 @@ const PROMPTS: PromptItem[] = [
     content: "Develop a modern architectural portfolio site using a 'Bento Box' grid layout. Features: Parallax scroll effects for featured properties, a sleek contact form with floating labels, and an interactive image gallery that expands into a full-screen light-box with smooth transitions."
   },
   {
-    id: 'wellness',
+    id: 'mindful-meditation',
     title: 'Mindful Meditation App',
     niche: 'Health / Wellness',
     icon: HeartPulse,
@@ -82,7 +85,7 @@ const PROMPTS: PromptItem[] = [
     content: "Design a serene meditation app interface. Use soft pastel HSL colors (Mint, Soft Rose), a 'breathing' pulse animation for the main action button, and smooth fade-in transitions between sessions. Include a minimalist progress ring for 'Daily Streak' with SVG stroke-dasharray animations."
   },
   {
-    id: 'dining',
+    id: 'michelin-star-menu',
     title: 'Michelin Star Menu',
     niche: 'Food / Dining',
     icon: Utensils,
@@ -90,7 +93,7 @@ const PROMPTS: PromptItem[] = [
     content: "Create a vibrant, interactive Michelin-star restaurant menu. Use elegant Gold-to-Copper gradients, serif accents, and a cross-fade 'Chef's Specials' carousel. Implement a smooth scroll-behavior between 'Appetizers', 'Main Course', and 'Desserts' with category-specific micro-interactions."
   },
   {
-    id: 'creative-agency',
+    id: 'digital-design-studio',
     title: 'Digital Design Studio',
     niche: 'Creative Agency',
     icon: Palette,
@@ -98,7 +101,7 @@ const PROMPTS: PromptItem[] = [
     content: "Build a bold, high-contrast creative agency landing page. Features: Brutalist-inspired large typography, hover-triggered image reveals that follow the cursor, and 'magnetic' buttons. Use a monochromatic layout with one high-saturation accent color like 'International Orange'."
   },
   {
-    id: 'edu-platform',
+    id: 'gamified-learning',
     title: 'Gamified Learning',
     niche: 'Education',
     icon: GraduationCap,
@@ -106,7 +109,7 @@ const PROMPTS: PromptItem[] = [
     content: "Design a gamified E-learning dashboard. Include progress rings with SVG animations, a 'Leaderboard' with smooth re-ordering transitions, and course cards that scale slightly on hover. Implement a 'Current Lesson' player with glassmorphism controls and sleek progress bars."
   },
   {
-    id: 'travel-space',
+    id: 'space-tourism-explorer',
     title: 'Space Tourism Explorer',
     niche: 'Travel / Adventure',
     icon: Globe,
@@ -114,20 +117,20 @@ const PROMPTS: PromptItem[] = [
     content: "Develop an immersive 'Space Journey' landing page. Use deep space black, CSS-powered starfield background, and futuristic typography. Features: A 'Book Your Flight' modal with a 3D glassmorphism effect and interactive planet selection cards with subtle glow transitions."
   },
   {
-    id: 'web3-wallet',
-    title: 'Next-Gen Crypto Wallet',
-    niche: 'Web3 / Crypto',
-    icon: Rocket,
+    id: 'ai-saas',
+    niche: 'Software',
+    title: 'AI Platform SaaS',
+    icon: Cpu,
     color: 'violet',
-    content: "Create a cutting-edge Crypto Wallet interface. Features: A Neumorphic main card showing balance, a real-time 'Token Swap' interface with micro-interactions on input, and a 'Recent Activity' feed with 1ms-style entrance animations. Use a vibrant 'Cyber-Blue' and 'Hyper-Lime' color scheme."
+    content: "Design a futuristic AI SaaS landing page. Aesthetic: 'Cyber-Modern' with deep indigo backgrounds and violet-fuchsia gradients. Features: An animated SVG 'Neural Network' background, glassmorphism pricing cards, GSAP-powered 'Feature Reveal' on scroll, and glowing HSL border effects on primary buttons."
   },
   {
-    id: 'eco-energy',
-    title: 'Green Energy Dashboard',
-    niche: 'Sustainability / Tech',
+    id: 'green-energy',
+    title: 'Solar Energy Platform',
+    niche: 'Sustainability',
     icon: Zap,
     color: 'emerald',
-    content: "Develop a high-end renewable energy monitoring dashboard (Solar/Wind). Features: Animated flow-lines representing energy distribution, glassmorphism status cards with glowing emerald accents, and a 'Carbon Offset' tracker using a premium SVG gauge. Aesthetic: Clean, white/slate minimal with deep green gradients."
+    content: "A world-class clean energy landing page. Aesthetic: 'Eco-Minimalist' with sage greens and soft sunlight ambers. Features: 3D-effect solar panel statistics using CSS transforms, a smooth scroll-triggered horizontal timeline of 'Planet Impact', and interactive HSL maps showing energy savings."
   },
   {
     id: 'pet-wellness',
@@ -138,7 +141,7 @@ const PROMPTS: PromptItem[] = [
     content: "Design a premium pet wellness and adoption hub. Use soft organic shapes, a warm 'Sand & Peach' HSL palette, and smooth 'staggered' entrance animations for pet cards. Include an interactive 'Match-Making' quiz with micro-animations and a sleek vertical timeline for medical history."
   },
   {
-    id: 'legal-elite',
+    id: 'modern-law-firm',
     title: 'Modern Law Firm',
     niche: 'Professional Services',
     icon: GraduationCap,
@@ -146,44 +149,44 @@ const PROMPTS: PromptItem[] = [
     content: "Build a world-class legal firm landing page. Aesthetic: 'Old Money Luxury' meets 'Silicon Valley Clean'. Use deep navy backgrounds, gold serif typography (Playfair), and high-resolution architectural photography. Features: Reveal-on-scroll case studies and a minimalist, floating consultation booking card."
   },
   {
-    id: 'cyber-vault',
-    title: 'Cybersecurity Threat Center',
-    niche: 'Security / IT',
-    icon: Cpu,
-    color: 'blue',
-    content: "Create a high-tech cybersecurity threat console. Features: An interactive 'Global Threat Map' using SVG paths, a scrolling 'Live Breach Log' terminal, and glassmorphism security metrics. Use a dark 'Deep Matrix Blue' theme with pulsating red warning indicators and scan-line overlays."
+    id: 'cyber-security',
+    title: 'DefendAI Cyber Suite',
+    niche: 'Tech Security',
+    icon: Shield,
+    color: 'orange',
+    content: "A high-security tech landing page. Aesthetic: 'Dark Matrix' with slate-950 background and glowing orange-red security alerts. Features: A 'Live Threat Map' simulation using moving SVG particles, grid-pattern backgrounds with mask-fade, and heavy glassmorphism for command center cards."
   },
   {
-    id: 'festival-vibe',
+    id: 'music-festival',
     title: 'Music Festival Experience',
     niche: 'Events / Entertainment',
     icon: Palette,
-    color: 'orange',
+    color: 'fuchsia',
     content: "Design a vibrant, high-energy music festival landing page. Use horizontal scroll sections, 'sticky' scrolling lineup cards, and bold, oversized kinetic typography. Implement a sticky 'Buy Tickets' button with a subtle hover-shimmer effect and a dynamic countdown timer using HSL gradients."
   },
   {
-    id: 'interior-design',
-    title: 'Luxury Interior Showcase',
-    niche: 'Design / Real Estate',
-    icon: Home,
-    color: 'purple',
-    content: "Develop an elegant interior design portfolio. Features: Split-screen hero layout with smooth cross-fade transitions, 'Bento Box' grid for projects that expands on click, and minimalist navigation. Use a palette of 'Muted Lavender' and 'Silver Gray' with premium serif font pairing."
+    id: 'elite-interior-design',
+    title: 'Elite Interior Design Portfolio',
+    niche: 'Luxury Real Estate',
+    icon: Layout,
+    color: 'rose',
+    content: "A sophisticated interior design agency site. Aesthetic: 'Quiet Luxury' with creamy beige HSL tones and serif typography. Features: Full-page horizontal scrolling for the 'Work Gallery', interactive before/after sliders, and GSAP-powered image reveals that feel 'Architectural'."
   },
   {
-    id: 'dex-pro',
-    title: 'Pro Crypto Exchange',
-    niche: 'Fintech / Crypto',
-    icon: Zap,
-    color: 'indigo',
-    content: "Build a professional-grade decentralized exchange (DEX) landing page. Features: Real-time price tickers with 'green/red' flash animations on change, an interactive staking calculator, and a sleek 'Roadmap' using a glowing neon path. Aesthetic: Dark, futuristic with indigo and electric pink accents."
+    id: 'crypto-exchange',
+    title: 'Pro Crypto Terminal',
+    niche: 'Web3',
+    icon: Cpu,
+    color: 'cyan',
+    content: "A high-fidelity crypto trading terminal. Aesthetic: 'Elite Trading' with dark slate-950 and neon cyan status bars. Features: Real-time lookalike SVG candlestick charts, a 'Flash Order' panel with HSL glow interactions, and a multi-pane Bento layout for asset management."
   },
   {
     id: 'ev-showroom',
-    title: 'Electric Vehicle Showroom',
-    niche: 'Automotive / Tech',
-    icon: Globe,
+    title: 'NextGen EV Showroom',
+    niche: 'Automotive',
+    icon: Zap,
     color: 'cyan',
-    content: "Create an immersive EV showroom landing page. Use high-end car image reveal animations (top-to-bottom wipe), interactive 360-degree color selectors, and ultra-smooth scroll-linked battery range visualizations. Aesthetic: Titanium Silver and Cyber Cyan with minimalist, wide-track typography."
+    content: "Create an immersive EV showroom landing page. Use high-end car image reveal animations (top-to-bottom wipe), interactive 360-degree color selectors, and ultra-smooth scroll-linked battery range visualizations. Aesthetic: Titanium Silver and Cyber Cyan with minimalist, wide-track typography. [GSAP Animations Required]"
   },
   {
     id: 'pro-trainer',
