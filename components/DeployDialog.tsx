@@ -29,7 +29,8 @@ import {
   Loader2,
   ExternalLink,
   ShieldCheck,
-  Server
+  Server,
+  ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,9 +38,11 @@ interface DeployDialogProps {
   isOpen: boolean;
   onClose: () => void;
   code: string;
+  githubSettings: { token: string; owner: string; repo: string; path: string };
+  onPullCode: (code: string) => void;
 }
 
-export function DeployDialog({ isOpen, onClose, code }: DeployDialogProps) {
+export function DeployDialog({ isOpen, onClose, code, githubSettings, onPullCode }: DeployDialogProps) {
   const [activeTab, setActiveTab] = useState("export");
   const [isDeploying, setIsDeploying] = useState(false);
   
@@ -51,6 +54,7 @@ export function DeployDialog({ isOpen, onClose, code }: DeployDialogProps) {
   const [projectName, setProjectName] = useState("WebCrafter Project");
   const [isValidating, setIsValidating] = useState(false);
   const [isUsingServerToken, setIsUsingServerToken] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Persistence: Load settings on mount
   React.useEffect(() => {
@@ -160,6 +164,61 @@ export function DeployDialog({ isOpen, onClose, code }: DeployDialogProps) {
     }
   };
 
+  const handleGitHubPush = async () => {
+    if (!githubSettings.token || !githubSettings.owner || !githubSettings.repo) {
+      toast.error("Please configure your GitHub settings in the System panel first.");
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const response = await fetch('/api/github/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...githubSettings,
+          content: code,
+          message: `Update from WebCrafter: ${new Date().toLocaleString()}`
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to push to GitHub');
+
+      toast.success("Successfully pushed to GitHub!");
+    } catch (error: any) {
+      toast.error(`GitHub Push failed: ${error.message}`);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleGitHubPull = async () => {
+    if (!githubSettings.token || !githubSettings.owner || !githubSettings.repo) {
+      toast.error("Please configure your GitHub settings in the System panel first.");
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const response = await fetch('/api/github/pull', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(githubSettings)
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to pull from GitHub');
+
+      onPullCode(data.content);
+      toast.success("Successfully pulled code from GitHub!");
+    } catch (error: any) {
+      toast.error(`GitHub Pull failed: ${error.message}`);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px] bg-slate-950 border-slate-800 p-0 overflow-hidden shadow-2xl">
@@ -183,6 +242,10 @@ export function DeployDialog({ isOpen, onClose, code }: DeployDialogProps) {
               </TabsTrigger>
               <TabsTrigger value="coolify" className="gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
                 <Cloud className="w-4 h-4" /> Coolify
+              </TabsTrigger>
+              <TabsTrigger value="github" className="gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                GitHub
               </TabsTrigger>
             </TabsList>
 
@@ -308,6 +371,50 @@ export function DeployDialog({ isOpen, onClose, code }: DeployDialogProps) {
                 </div>
               </div>
             </TabsContent>
+
+            <TabsContent value="github" className="space-y-6 mt-0 animate-in fade-in slide-in-from-right-4 duration-300">
+               <div className="p-4 rounded-lg bg-blue-900/10 border border-blue-900/30 flex items-start gap-3">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current text-blue-400 mt-0.5"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                <div>
+                  <h4 className="text-[12px] font-bold text-blue-300 uppercase tracking-wider">GitHub Synchronization</h4>
+                  <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
+                    Push your code to a repository or pull the latest version from GitHub.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <button 
+                  onClick={handleGitHubPush}
+                  disabled={isSyncing}
+                  className="flex items-center gap-4 p-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-900 hover:border-blue-500/50 transition-all text-left group"
+                >
+                  <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+                    {isSyncing ? <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" /> : <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current text-emerald-400"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Push to GitHub</h3>
+                    <p className="text-xs text-slate-500">Upload current code to {githubSettings.owner}/{githubSettings.repo}</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 ml-auto text-slate-800 group-hover:text-emerald-500 transition-colors" />
+                </button>
+
+                <button 
+                  onClick={handleGitHubPull}
+                  disabled={isSyncing}
+                  className="flex items-center gap-4 p-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-900 hover:border-blue-500/50 transition-all text-left group"
+                >
+                  <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
+                    {isSyncing ? <Loader2 className="w-6 h-6 text-orange-400 animate-spin" /> : <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current text-orange-400"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 14.5l-3.5-3.5 1.4-1.4 1.1 1.1V7h2v6.2l1.1-1.1 1.4 1.4-3.5 3.5z"/></svg>}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Pull from GitHub</h3>
+                    <p className="text-xs text-slate-500">Fetch code from {githubSettings.owner}/{githubSettings.repo}</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 ml-auto text-slate-800 group-hover:text-orange-500 transition-colors" />
+                </button>
+              </div>
+            </TabsContent>
           </Tabs>
         </div>
 
@@ -322,6 +429,8 @@ export function DeployDialog({ isOpen, onClose, code }: DeployDialogProps) {
               {isDeploying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
               Launch Deployment
             </Button>
+          ) : activeTab === 'github' ? (
+             <Button variant="ghost" onClick={onClose} className="text-slate-400 border border-slate-800">Done</Button>
           ) : (
              <Button variant="outline" onClick={onClose} className="border-slate-800 text-slate-300">Close</Button>
           )}

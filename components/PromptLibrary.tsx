@@ -120,6 +120,86 @@ const PROMPTS: PromptItem[] = [
     icon: Rocket,
     color: 'violet',
     content: "Create a cutting-edge Crypto Wallet interface. Features: A Neumorphic main card showing balance, a real-time 'Token Swap' interface with micro-interactions on input, and a 'Recent Activity' feed with 1ms-style entrance animations. Use a vibrant 'Cyber-Blue' and 'Hyper-Lime' color scheme."
+  },
+  {
+    id: 'eco-energy',
+    title: 'Green Energy Dashboard',
+    niche: 'Sustainability / Tech',
+    icon: Zap,
+    color: 'emerald',
+    content: "Develop a high-end renewable energy monitoring dashboard (Solar/Wind). Features: Animated flow-lines representing energy distribution, glassmorphism status cards with glowing emerald accents, and a 'Carbon Offset' tracker using a premium SVG gauge. Aesthetic: Clean, white/slate minimal with deep green gradients."
+  },
+  {
+    id: 'pet-wellness',
+    title: 'Pet Care & Adoption',
+    niche: 'Animals / Wellness',
+    icon: HeartPulse,
+    color: 'rose',
+    content: "Design a premium pet wellness and adoption hub. Use soft organic shapes, a warm 'Sand & Peach' HSL palette, and smooth 'staggered' entrance animations for pet cards. Include an interactive 'Match-Making' quiz with micro-animations and a sleek vertical timeline for medical history."
+  },
+  {
+    id: 'legal-elite',
+    title: 'Modern Law Firm',
+    niche: 'Professional Services',
+    icon: GraduationCap,
+    color: 'amber',
+    content: "Build a world-class legal firm landing page. Aesthetic: 'Old Money Luxury' meets 'Silicon Valley Clean'. Use deep navy backgrounds, gold serif typography (Playfair), and high-resolution architectural photography. Features: Reveal-on-scroll case studies and a minimalist, floating consultation booking card."
+  },
+  {
+    id: 'cyber-vault',
+    title: 'Cybersecurity Threat Center',
+    niche: 'Security / IT',
+    icon: Cpu,
+    color: 'blue',
+    content: "Create a high-tech cybersecurity threat console. Features: An interactive 'Global Threat Map' using SVG paths, a scrolling 'Live Breach Log' terminal, and glassmorphism security metrics. Use a dark 'Deep Matrix Blue' theme with pulsating red warning indicators and scan-line overlays."
+  },
+  {
+    id: 'festival-vibe',
+    title: 'Music Festival Experience',
+    niche: 'Events / Entertainment',
+    icon: Palette,
+    color: 'orange',
+    content: "Design a vibrant, high-energy music festival landing page. Use horizontal scroll sections, 'sticky' scrolling lineup cards, and bold, oversized kinetic typography. Implement a sticky 'Buy Tickets' button with a subtle hover-shimmer effect and a dynamic countdown timer using HSL gradients."
+  },
+  {
+    id: 'interior-design',
+    title: 'Luxury Interior Showcase',
+    niche: 'Design / Real Estate',
+    icon: Home,
+    color: 'purple',
+    content: "Develop an elegant interior design portfolio. Features: Split-screen hero layout with smooth cross-fade transitions, 'Bento Box' grid for projects that expands on click, and minimalist navigation. Use a palette of 'Muted Lavender' and 'Silver Gray' with premium serif font pairing."
+  },
+  {
+    id: 'dex-pro',
+    title: 'Pro Crypto Exchange',
+    niche: 'Fintech / Crypto',
+    icon: Zap,
+    color: 'indigo',
+    content: "Build a professional-grade decentralized exchange (DEX) landing page. Features: Real-time price tickers with 'green/red' flash animations on change, an interactive staking calculator, and a sleek 'Roadmap' using a glowing neon path. Aesthetic: Dark, futuristic with indigo and electric pink accents."
+  },
+  {
+    id: 'ev-showroom',
+    title: 'Electric Vehicle Showroom',
+    niche: 'Automotive / Tech',
+    icon: Globe,
+    color: 'cyan',
+    content: "Create an immersive EV showroom landing page. Use high-end car image reveal animations (top-to-bottom wipe), interactive 360-degree color selectors, and ultra-smooth scroll-linked battery range visualizations. Aesthetic: Titanium Silver and Cyber Cyan with minimalist, wide-track typography."
+  },
+  {
+    id: 'pro-trainer',
+    title: 'Elite Fitness Dashboard',
+    niche: 'Health / Fitness',
+    icon: HeartPulse,
+    color: 'violet',
+    content: "Design a premium personal training dashboard. Features: Progress charts with animated SVG fill, a 'Bento Box' workout plan view, and a sleek nutrition tracker with glass-effect icons. Use high-contrast 'Carbon Black' and 'Vivid Violet' accents with bold, italicized headlines."
+  },
+  {
+    id: 'coffee-roastery',
+    title: 'Artisan Coffee Roastery',
+    niche: 'Food / E-commerce',
+    icon: Utensils,
+    color: 'sky',
+    content: "Develop a boutique coffee roastery store. Aesthetic: 'Craft & Organic' with grainy textures and a 'Warm Earth' HSL palette. Features: Hover-trigger parallax for coffee bags, a 'Flavor Profile' radar chart for each blend, and a smooth, minimalist cart sliding drawer from the right."
   }
 ];
 

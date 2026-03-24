@@ -67,6 +67,12 @@ export default function Home() {
   const [isSearchEnabled, setIsSearchEnabled] = useState(false)
   const [attachedFiles, setAttachedFiles] = useState<File[]>([])
   const [selectedPersona, setSelectedPersona] = useState<"developer" | "copywriter" | "thinking">("developer")
+  const [githubSettings, setGithubSettings] = useState({
+    token: "",
+    owner: "",
+    repo: "",
+    path: "index.html"
+  })
 
   const { keys } = useKeysManager()
   const {
@@ -91,6 +97,7 @@ export default function Home() {
           if (data.systemPrompt) setSystemPrompt(data.systemPrompt);
           if (data.selectedProvider) setSelectedProvider(data.selectedProvider);
           if (data.selectedPersona) setSelectedPersona(data.selectedPersona);
+          if (data.githubSettings) setGithubSettings(data.githubSettings);
         }
       });
 
@@ -121,6 +128,7 @@ export default function Home() {
           systemPrompt,
           selectedProvider,
           selectedPersona,
+          githubSettings,
           updatedAt: new Date().toISOString()
         }, { merge: true });
         console.log("Settings synced to cloud");
@@ -341,6 +349,8 @@ export default function Home() {
               onSystemPromptChange={setSystemPrompt}
               selectedPersona={selectedPersona}
               onPersonaChange={setSelectedPersona}
+              githubSettings={githubSettings}
+              onGithubSettingsChange={(newSettings) => setGithubSettings(prev => ({ ...prev, ...newSettings }))}
               isLoadingModels={isLoadingModels}
             />
           </div>
@@ -352,6 +362,8 @@ export default function Home() {
         isOpen={isDeployDialogOpen} 
         onClose={() => setIsDeployDialogOpen(false)} 
         code={generatedCode}
+        githubSettings={githubSettings}
+        onPullCode={setGeneratedCode}
       />
 
       {/* Version Footer */}
