@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Key, Eye, EyeOff, Save, Trash2, ExternalLink, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Key, Eye, EyeOff, Save, Trash2, ExternalLink, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -114,9 +114,41 @@ export function useKeysManager() {
 export function KeysManager() {
   const { keys, saveKey, removeKey } = useKeysManager();
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
+  const [testingProvider, setTestingProvider] = useState<string | null>(null);
 
   const toggleVisibility = (provider: string) => {
     setVisibleKeys(prev => ({ ...prev, [provider]: !prev[provider] }));
+  };
+
+  const handleTestConnection = async (provider: LLMProvider) => {
+    const apiKey = keys[provider]?.apiKey;
+    const baseUrl = keys[provider]?.baseUrl;
+
+    if (!apiKey && provider !== LLMProvider.OLLAMA && provider !== LLMProvider.LM_STUDIO) {
+      toast.error(`Please enter an API key for ${provider} first.`);
+      return;
+    }
+
+    setTestingProvider(provider);
+    try {
+      const response = await fetch('/api/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider, apiKey, baseUrl })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success(`Connection to ${provider} successful! Found ${data.modelCount} models.`);
+      } else {
+        throw new Error(data.error || 'Failed to connect');
+      }
+    } catch (error: any) {
+      console.error('Test Connection Error:', error);
+      toast.error(`Connection failed: ${error.message}`);
+    } finally {
+      setTestingProvider(null);
+    }
   };
 
   const renderProviderKey = (providerId: LLMProvider) => {
@@ -146,6 +178,16 @@ export function KeysManager() {
               >
                 Get Key <ExternalLink className="w-3 h-3" />
               </a>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-6 px-2 text-[10px] bg-blue-600/5 border-blue-500/20 hover:bg-blue-600/10 text-blue-400"
+                onClick={() => handleTestConnection(providerId)}
+                disabled={testingProvider === providerId}
+              >
+                {testingProvider === providerId ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+                Test
+              </Button>
             </div>
           </div>
           <CardDescription className="text-xs">

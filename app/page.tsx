@@ -313,6 +313,8 @@ export default function Home() {
                     onDeploy={() => setIsDeployDialogOpen(true)}
                     selectedPersona={selectedPersona}
                     onPersonaChange={setSelectedPersona}
+                    systemPrompt={systemPrompt}
+                    setSystemPrompt={setSystemPrompt}
                   />
                 </div>
               </div>

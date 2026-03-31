@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { debounce } from "lodash"
 import { Badge } from "@/components/ui/badge"
-import { Download, RefreshCw } from "lucide-react"
+import { Download, RefreshCw, Terminal } from "lucide-react"
 import { ThinkingIndicator } from "@/components/thinking-indicator"
+import { SystemInstructions } from "@/components/SystemInstructions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -40,6 +41,8 @@ interface GenerationViewProps {
   onDeploy: () => void
   selectedPersona: "developer" | "copywriter" | "thinking"
   onPersonaChange: (persona: "developer" | "copywriter" | "thinking") => void
+  systemPrompt: string
+  setSystemPrompt: (value: string) => void
 }
 
 export function GenerationView({
@@ -59,7 +62,9 @@ export function GenerationView({
   setAttachedFiles,
   onDeploy,
   selectedPersona,
-  onPersonaChange
+  onPersonaChange,
+  systemPrompt,
+  setSystemPrompt
 }: GenerationViewProps) {
   const [viewportSize, setViewportSize] = useState<"desktop" | "tablet" | "mobile">("desktop")
   const [copySuccess, setCopySuccess] = useState(false)
@@ -73,6 +78,7 @@ export function GenerationView({
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [newPrompt, setNewPrompt] = useState("")
   const [isLiveEditEnabled, setIsLiveEditEnabled] = useState(false)
+  const [isSystemInstructionsOpen, setIsSystemInstructionsOpen] = useState(false)
 
   const prevContentRef = useRef<string>("");
 
@@ -236,7 +242,11 @@ export function GenerationView({
     model,
     onDeploy,
     selectedPersona,
-    onPersonaChange
+    onPersonaChange,
+    systemPrompt,
+    setSystemPrompt,
+    isSystemInstructionsOpen,
+    setIsSystemInstructionsOpen
   }
 
   const previewPanelProps = {

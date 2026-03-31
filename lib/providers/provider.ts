@@ -12,9 +12,20 @@ import { LLMProvider, getProviderApiKey, getProviderBaseUrl } from './config';
 // Shared system prompt for all providers
 export const SYSTEM_PROMPT = "You are an expert web developer AI. Your task is to generate a single, self-contained HTML file based on the user's prompt. This HTML file must include all necessary HTML structure, CSS styles within <style> tags in the <head>, and JavaScript code within <script> tags, preferably at the end of the <body>. IMPORTANT: Do NOT use markdown formatting. Do NOT wrap the code in ```html and ``` tags. Do NOT output any text or explanation before or after the HTML code. Only output the raw HTML code itself, starting with <!DOCTYPE html> and ending with </html>. Ensure the generated CSS and JavaScript are directly embedded in the HTML file.";
 
+// Shared interface for model information
+export interface ModelInfo {
+  id: string;
+  name: string;
+  capabilities: {
+    vision: boolean;
+    search: boolean;
+    reasoning: boolean;
+  };
+}
+
 // Common interface for all providers
 export interface LLMProviderClient {
-  getModels: () => Promise<{ id: string; name: string }[]>;
+  getModels: () => Promise<ModelInfo[]>;
   getModel: (modelId: string, options?: ModelOptions) => LanguageModel;
 }
 
@@ -30,47 +41,6 @@ function wrapWithReasoningMiddleware(model: LanguageModel): LanguageModel {
     model: model as Parameters<typeof wrapLanguageModel>[0]['model'],
     middleware: extractReasoningMiddleware({ tagName: 'think' }),
   }) as LanguageModel;
-}
-
-// Provider factory functions
-function getDeepSeekProvider() {
-  return createDeepSeek({ apiKey: getProviderApiKey(LLMProvider.DEEPSEEK) || '' });
-}
-
-function getOpenRouterProvider() {
-  return createOpenRouter({ apiKey: getProviderApiKey(LLMProvider.OPENROUTER) || '' });
-}
-
-function getAnthropicProvider() {
-  return createAnthropic({ apiKey: getProviderApiKey(LLMProvider.ANTHROPIC) || '' });
-}
-
-function getGoogleProvider() {
-  return createGoogleGenerativeAI({ apiKey: getProviderApiKey(LLMProvider.GOOGLE) || '' });
-}
-
-function getMistralProvider() {
-  return createMistral({ apiKey: getProviderApiKey(LLMProvider.MISTRAL) || '' });
-}
-
-function getCerebrasProvider() {
-  return createCerebras({ apiKey: getProviderApiKey(LLMProvider.CEREBRAS) || '' });
-}
-
-function getOpenAICompatibleProvider() {
-  return createOpenAICompatible({
-    name: 'openai_compatible',
-    baseURL: getProviderBaseUrl(LLMProvider.OPENAI_COMPATIBLE),
-    apiKey: getProviderApiKey(LLMProvider.OPENAI_COMPATIBLE) || '',
-  });
-}
-
-function getLMStudioProvider() {
-  return createOpenAICompatible({
-    name: 'lm_studio',
-    baseURL: getProviderBaseUrl(LLMProvider.LM_STUDIO),
-    apiKey: 'lm-studio',
-  });
 }
 
 // Factory function to create a provider client
@@ -110,16 +80,15 @@ class DeepSeekProviderClient implements LLMProviderClient {
     });
   }
 
-  async getModels() {
-    // DeepSeek has fixed models (no public API for listing)
+  async getModels(): Promise<ModelInfo[]> {
     return [
-      { id: 'deepseek-chat', name: 'DeepSeek Chat' },
-      { id: 'deepseek-reasoner', name: 'DeepSeek Reasoner' },
+      { id: 'deepseek-chat', name: 'DeepSeek Chat', capabilities: { vision: true, search: false, reasoning: false } },
+      { id: 'deepseek-reasoner', name: 'DeepSeek Reasoner', capabilities: { vision: false, search: false, reasoning: true } },
     ];
   }
 
-  getModel(modelId: string): LanguageModel {
-    const baseModel = this.provider(modelId) as unknown as LanguageModel;
+  getModel(modelId: string, options?: ModelOptions): LanguageModel {
+    const baseModel = (this.provider as any)(modelId, options) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
@@ -136,30 +105,36 @@ class OpenRouterProviderClient implements LLMProviderClient {
     });
   }
 
-  async getModels() {
+  async getModels(): Promise<ModelInfo[]> {
     try {
       const apiKey = getProviderApiKey(LLMProvider.OPENROUTER, this.customApiKey);
       const response = await fetch('https://openrouter.ai/api/v1/models', {
         headers: apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {},
       });
 
-      if (!response.ok) {
-        throw new Error(`Error fetching OpenRouter models: ${response.statusText}`);
-      }
+      if (!response.ok) throw new Error(`Error fetching OpenRouter models: ${response.statusText}`);
 
       const data = await response.json();
-      return data.data ? data.data.map((model: { id: string; name?: string }) => ({
+      return data.data ? data.data.map((model: any) => ({
         id: model.id,
         name: model.name || model.id,
+        capabilities: {
+          vision: model.description?.toLowerCase().includes('vision') || model.id.includes('vision') || model.id.includes('claude-3') || model.id.includes('gpt-4o'),
+          search: false,
+          reasoning: model.id.includes('deepseek-r1') || model.id.includes('o1') || model.id.includes('reasoner')
+        }
       })) : [];
     } catch (error) {
       console.error('Error fetching OpenRouter models:', error);
-      throw new Error('Cannot fetch OpenRouter models. Check your API key.');
+      return [];
     }
   }
 
   getModel(modelId: string, options?: ModelOptions): LanguageModel {
-    const baseModel = this.provider.chat(modelId, options) as unknown as LanguageModel;
+    const baseModel = (this.provider as any).chat(modelId, {
+      ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
+      ...(options?.topP !== undefined ? { topP: options.topP } : {}),
+    } as any) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
@@ -177,11 +152,10 @@ class AnthropicProviderClient implements LLMProviderClient {
     });
   }
 
-  async getModels() {
-    const apiFallbackModels = [
-      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet' },
-      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku' },
-      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' },
+  async getModels(): Promise<ModelInfo[]> {
+    const apiFallbackModels: ModelInfo[] = [
+      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', capabilities: { vision: true, search: false, reasoning: false } },
+      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', capabilities: { vision: true, search: false, reasoning: false } },
     ];
 
     try {
@@ -195,15 +169,13 @@ class AnthropicProviderClient implements LLMProviderClient {
         },
       });
 
-      if (!response.ok) {
-        console.warn(`Could not fetch models from Anthropic API: ${response.statusText}. Using fallbacks.`);
-        return apiFallbackModels;
-      }
+      if (!response.ok) return apiFallbackModels;
 
       const data = await response.json();
-      return data.data ? data.data.map((model: { id: string; display_name?: string }) => ({
+      return data.data ? data.data.map((model: any) => ({
         id: model.id,
         name: model.display_name || model.id,
+        capabilities: { vision: true, search: false, reasoning: false }
       })) : apiFallbackModels;
     } catch (error) {
       console.error('Error fetching Anthropic models, using fallbacks:', error);
@@ -211,8 +183,8 @@ class AnthropicProviderClient implements LLMProviderClient {
     }
   }
 
-  getModel(modelId: string): LanguageModel {
-    const baseModel = this.provider(modelId) as unknown as LanguageModel;
+  getModel(modelId: string, options?: ModelOptions): LanguageModel {
+    const baseModel = (this.provider as any)(modelId, options) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
@@ -230,12 +202,10 @@ class GoogleProviderClient implements LLMProviderClient {
     });
   }
 
-  async getModels() {
-    const apiFallbackModels = [
-      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
-      { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
-      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
-      { id: 'gemini-1.0-pro', name: 'Gemini 1.0 Pro' },
+  async getModels(): Promise<ModelInfo[]> {
+    const apiFallbackModels: ModelInfo[] = [
+      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', capabilities: { vision: true, search: true, reasoning: false } },
+      { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', capabilities: { vision: true, search: true, reasoning: false } },
     ];
 
     try {
@@ -243,20 +213,21 @@ class GoogleProviderClient implements LLMProviderClient {
       if (!apiKey) return apiFallbackModels;
 
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-
-      if (!response.ok) {
-        console.warn(`Could not fetch models from Google AI API: ${response.statusText}. Using fallbacks.`);
-        return apiFallbackModels;
-      }
+      if (!response.ok) return apiFallbackModels;
 
       const data = await response.json();
       if (!data.models || data.models.length === 0) return apiFallbackModels;
 
       return data.models
         .filter((model: { name: string }) => model.name.includes('gemini'))
-        .map((model: { name: string; displayName?: string }) => ({
+        .map((model: any) => ({
           id: model.name.replace('models/', ''),
           name: model.displayName || model.name.replace('models/', ''),
+          capabilities: {
+            vision: true,
+            search: true,
+            reasoning: model.name.includes('thinking') || false
+          }
         }));
     } catch (error) {
       console.error('Error fetching Google AI models, using fallbacks:', error);
@@ -265,7 +236,7 @@ class GoogleProviderClient implements LLMProviderClient {
   }
 
   getModel(modelId: string, options?: ModelOptions): LanguageModel {
-    const baseModel = this.provider(modelId, options) as unknown as LanguageModel;
+    const baseModel = (this.provider as any)(modelId, options) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
@@ -283,12 +254,10 @@ class MistralProviderClient implements LLMProviderClient {
     });
   }
 
-  async getModels() {
-    const apiFallbackModels = [
-      { id: 'mistral-large-latest', name: 'Mistral Large' },
-      { id: 'mistral-small-latest', name: 'Mistral Small' },
-      { id: 'pixtral-12b-2409', name: 'Pixtral 12B' },
-      { id: 'open-mistral-nemo', name: 'Mistral Nemo' },
+  async getModels(): Promise<ModelInfo[]> {
+    const apiFallbackModels: ModelInfo[] = [
+      { id: 'mistral-large-latest', name: 'Mistral Large', capabilities: { vision: false, search: false, reasoning: false } },
+      { id: 'pixtral-12b-2409', name: 'Pixtral 12B', capabilities: { vision: true, search: false, reasoning: false } },
     ];
 
     try {
@@ -299,15 +268,17 @@ class MistralProviderClient implements LLMProviderClient {
         headers: { 'Authorization': `Bearer ${apiKey}` },
       });
 
-      if (!response.ok) {
-        console.warn(`Could not fetch models from Mistral API: ${response.statusText}. Using fallbacks.`);
-        return apiFallbackModels;
-      }
+      if (!response.ok) return apiFallbackModels;
 
       const data = await response.json();
-      return data.data ? data.data.map((model: { id: string; name?: string }) => ({
+      return data.data ? data.data.map((model: any) => ({
         id: model.id,
         name: model.name || model.id,
+        capabilities: {
+          vision: model.id.includes('pixtral') || model.id.includes('vision'),
+          search: false,
+          reasoning: false
+        }
       })) : apiFallbackModels;
     } catch (error) {
       console.error('Error fetching Mistral models, using fallbacks:', error);
@@ -316,7 +287,7 @@ class MistralProviderClient implements LLMProviderClient {
   }
 
   getModel(modelId: string, options?: ModelOptions): LanguageModel {
-    const baseModel = this.provider(modelId, options) as unknown as LanguageModel;
+    const baseModel = (this.provider as any)(modelId, options) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
@@ -334,10 +305,9 @@ class CerebrasProviderClient implements LLMProviderClient {
     });
   }
 
-  async getModels() {
-    const apiFallbackModels = [
-      { id: 'llama3.1-70b', name: 'Llama 3.1 70B' },
-      { id: 'llama3.1-8b', name: 'Llama 3.1 8B' },
+  async getModels(): Promise<ModelInfo[]> {
+    const apiFallbackModels: ModelInfo[] = [
+      { id: 'llama3.1-70b', name: 'Llama 3.1 70B', capabilities: { vision: false, search: false, reasoning: false } },
     ];
 
     try {
@@ -348,15 +318,13 @@ class CerebrasProviderClient implements LLMProviderClient {
         headers: { 'Authorization': `Bearer ${apiKey}` },
       });
 
-      if (!response.ok) {
-        console.warn(`Could not fetch models from Cerebras API: ${response.statusText}. Using fallbacks.`);
-        return apiFallbackModels;
-      }
+      if (!response.ok) return apiFallbackModels;
 
       const data = await response.json();
-      return data.data ? data.data.map((model: { id: string }) => ({
+      return data.data ? data.data.map((model: any) => ({
         id: model.id,
         name: model.id,
+        capabilities: { vision: false, search: false, reasoning: false }
       })) : apiFallbackModels;
     } catch (error) {
       console.error('Error fetching Cerebras models, using fallbacks:', error);
@@ -365,7 +333,7 @@ class CerebrasProviderClient implements LLMProviderClient {
   }
 
   getModel(modelId: string, options?: ModelOptions): LanguageModel {
-    const baseModel = this.provider(modelId, options) as unknown as LanguageModel;
+    const baseModel = (this.provider as any)(modelId, options) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
@@ -386,12 +354,7 @@ class OpenAICompatibleProviderClient implements LLMProviderClient {
     });
   }
 
-  async getModels() {
-    const envModel = process.env.OPENAI_COMPATIBLE_MODEL;
-    if (envModel && !this.customBaseUrl) {
-      return [{ id: envModel, name: envModel }];
-    }
-
+  async getModels(): Promise<ModelInfo[]> {
     try {
       const baseUrl = getProviderBaseUrl(LLMProvider.OPENAI_COMPATIBLE, this.customBaseUrl);
       const apiKey = getProviderApiKey(LLMProvider.OPENAI_COMPATIBLE, this.customApiKey);
@@ -399,23 +362,26 @@ class OpenAICompatibleProviderClient implements LLMProviderClient {
         headers: apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {},
       });
 
-      if (!response.ok) {
-        throw new Error(`Error fetching models: ${response.statusText}`);
-      }
+      if (!response.ok) throw new Error(`Error fetching models: ${response.statusText}`);
 
       const data = await response.json();
-      return data.data ? data.data.map((model: { id: string }) => ({
+      return data.data ? data.data.map((model: any) => ({
         id: model.id,
         name: model.id,
+        capabilities: {
+          vision: model.id.includes('vision') || model.id.includes('claude-3'),
+          search: false,
+          reasoning: model.id.includes('thinking') || model.id.includes('r1')
+        }
       })) : [];
     } catch (error) {
       console.error('Error fetching OpenAI-compatible models:', error);
-      throw new Error('Cannot fetch models. Check your API configuration.');
+      return [];
     }
   }
 
   getModel(modelId: string, options?: ModelOptions): LanguageModel {
-    const baseModel = this.provider(modelId, options) as unknown as LanguageModel;
+    const baseModel = (this.provider as any)(modelId, options) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
@@ -428,30 +394,35 @@ class OllamaProviderClient implements LLMProviderClient {
     this.baseUrl = getProviderBaseUrl(LLMProvider.OLLAMA, customBaseUrl);
   }
 
-  async getModels() {
+  async getModels(): Promise<ModelInfo[]> {
     try {
       const response = await fetch(`${this.baseUrl}/api/tags`);
-      if (!response.ok) {
-        throw new Error(`Error fetching Ollama models: ${response.statusText}`);
-      }
+      if (!response.ok) throw new Error(`Error fetching Ollama models: ${response.statusText}`);
 
       const data = await response.json();
-      return data.models ? data.models.map((model: { name: string }) => ({
+      return data.models ? data.models.map((model: any) => ({
         id: model.name,
         name: model.name,
+        capabilities: {
+          vision: model.name.includes('vision') || model.name.includes('llava'),
+          search: false,
+          reasoning: model.name.includes('r1') || model.name.includes('thinking')
+        }
       })) : [];
     } catch (error) {
       console.error('Error fetching Ollama models:', error);
-      throw new Error('Cannot connect to Ollama. Is the server running?');
+      return [];
     }
   }
 
   getModel(modelId: string, options?: ModelOptions): LanguageModel {
-    // Enable Ollama's native thinking support for reasoning models (deepseek-r1, qwen3)
-    const baseModel = ollama(modelId, { think: true, ...options });
-    // Wrap with extractReasoningMiddleware to handle <think> tags if present
+    const baseModel = ollama(modelId, { 
+      think: true, 
+      ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
+      ...(options?.topP !== undefined ? { topP: options.topP } : {}),
+    });
     return wrapLanguageModel({
-      model: baseModel as Parameters<typeof wrapLanguageModel>[0]['model'],
+      model: baseModel as any,
       middleware: extractReasoningMiddleware({ tagName: 'think' }),
     }) as LanguageModel;
   }
@@ -471,26 +442,29 @@ class LMStudioProviderClient implements LLMProviderClient {
     });
   }
 
-  async getModels() {
+  async getModels(): Promise<ModelInfo[]> {
     try {
       const response = await fetch(`${this.baseUrl}/models`);
-      if (!response.ok) {
-        throw new Error(`Error fetching LM Studio models: ${response.statusText}`);
-      }
+      if (!response.ok) throw new Error(`Error fetching LM Studio models: ${response.statusText}`);
 
       const data = await response.json();
-      return data.data ? data.data.map((model: { id: string }) => ({
+      return data.data ? data.data.map((model: any) => ({
         id: model.id,
         name: model.id,
+        capabilities: { 
+          vision: model.id.includes('vision'), 
+          search: false, 
+          reasoning: model.id.includes('thinking')
+        }
       })) : [];
     } catch (error) {
       console.error('Error fetching LM Studio models:', error);
-      throw new Error('Cannot connect to LM Studio. Is the server running?');
+      return [];
     }
   }
 
   getModel(modelId: string, options?: ModelOptions): LanguageModel {
-    const baseModel = this.provider(modelId, options) as unknown as LanguageModel;
+    const baseModel = (this.provider as any)(modelId, options) as unknown as LanguageModel;
     return wrapWithReasoningMiddleware(baseModel);
   }
 }
@@ -509,7 +483,6 @@ export async function generateCodeStream(
     attachedFiles?: { name: string, type: string, data: string }[];
   }
 ): Promise<ReturnType<typeof streamText>> {
-  // Pass custom credentials to the provider client if provided
   const client = createProviderClient(provider, options?.apiKey, options?.baseUrl);
   const model = client.getModel(modelId, {
     temperature: options?.temperature,
@@ -517,16 +490,10 @@ export async function generateCodeStream(
     topK: options?.topK,
   });
   
-  // Construct messages for multi-modal support
-  const messages: any[] = [
-    { role: 'user', content: prompt }
-  ];
+  const messages: any[] = [{ role: 'user', content: prompt }];
 
   if (options?.attachedFiles && options.attachedFiles.length > 0) {
-    const parts: any[] = [
-      { type: 'text', text: prompt }
-    ];
-
+    const parts: any[] = [{ type: 'text', text: prompt }];
     options.attachedFiles.forEach(file => {
       try {
         const base64Content = file.data.split(',')[1];
@@ -541,18 +508,14 @@ export async function generateCodeStream(
         console.error('Error processing attachment:', file.name, e);
       }
     });
-
     messages[0].content = parts;
   }
 
-  // Handle Google Search tool
   let tools: any = undefined;
   if (options?.isSearchEnabled && provider === LLMProvider.GOOGLE) {
-    // Note: This enables the tool-use capability. 
-    // Gemini 1.5+ supports built-in search via specialized tools.
     tools = {
       webSearch: {
-        description: "Search the web for up-to-date information, documentation, or code examples.",
+        description: "Search the web for up-to-date information.",
         parameters: { type: 'object', properties: { query: { type: 'string' } } },
         execute: async ({ query }: { query: string }) => {
           console.log(`[Search Tool] Querying: ${query}`);
@@ -562,13 +525,11 @@ export async function generateCodeStream(
     };
   }
 
-  const result = streamText({
+  return streamText({
     model,
     system: systemPrompt || SYSTEM_PROMPT,
     messages,
     tools,
     ...(options?.maxTokens ? { maxTokens: options.maxTokens } : {}),
   });
-
-  return result;
 }

@@ -25,7 +25,7 @@ export const MODEL_CAPABILITIES: Record<string, ModelCapability> = {
   'claude-3-opus-20240229': { vision: true, search: false, tools: true, reasoning: false, maxTokens: 4096 },
 
   // DeepSeek Models
-  'deepseek-chat': { vision: false, search: false, tools: true, reasoning: false, maxTokens: 4096 },
+  'deepseek-chat': { vision: true, search: false, tools: true, reasoning: false, maxTokens: 4096 },
   'deepseek-reasoner': { vision: false, search: false, tools: false, reasoning: true, maxTokens: 4096 },
 
   // Mistral Models

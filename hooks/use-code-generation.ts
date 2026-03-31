@@ -60,7 +60,14 @@ export function useCodeGeneration() {
             return
         }
 
-        const finalPrompt = `${prompt}\n\n${DESIGN_EXCELLENCE_SUFFIX}`;
+        const finalPrompt = `
+### USER'S PRIMARY REQUEST (CRITICAL PRIORITY):
+${prompt}
+
+---
+### ELITE DESIGN SPECIFICATIONS (Apply to the request above):
+${DESIGN_EXCELLENCE_SUFFIX}
+`;
 
         setIsGenerating(true)
         setGeneratedCode("")

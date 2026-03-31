@@ -7,7 +7,8 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { CodeEditor } from "@/components/code-editor"
 import { WorkSteps } from "@/components/work-steps"
-import { MODEL_CAPABILITIES } from "@/lib/providers/capabilities"
+import { getModelCapabilities } from "@/lib/providers/capabilities"
+import { SystemInstructions } from "@/components/SystemInstructions"
 import { useRef } from "react"
 import { 
     Tooltip,
@@ -46,6 +47,10 @@ interface CodePanelProps {
     onDeploy?: () => void
     selectedPersona: "developer" | "copywriter" | "thinking"
     onPersonaChange: (persona: "developer" | "copywriter" | "thinking") => void
+    systemPrompt: string
+    setSystemPrompt: (value: string) => void
+    isSystemInstructionsOpen: boolean
+    setIsSystemInstructionsOpen: (value: boolean) => void
 }
 
 interface PreviewPanelProps {
@@ -92,11 +97,15 @@ export function CodePanel({
     model,
     onDeploy,
     selectedPersona,
-    onPersonaChange
+    onPersonaChange,
+    systemPrompt,
+    setSystemPrompt,
+    isSystemInstructionsOpen,
+    setIsSystemInstructionsOpen
 }: CodePanelProps) {
 
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const capabilities = MODEL_CAPABILITIES[model] || { vision: false, search: false }
+    const capabilities = getModelCapabilities(model)
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -120,6 +129,14 @@ export function CodePanel({
 
     return (
         <div className="h-full flex flex-col">
+        {/* System Instructions Section */}
+            <SystemInstructions 
+                value={systemPrompt}
+                onChange={setSystemPrompt}
+                isOpen={isSystemInstructionsOpen}
+                onToggle={() => setIsSystemInstructionsOpen(!isSystemInstructionsOpen)}
+            />
+
             {/* 
         CODE EDITOR SECTION 
         Takes up 65% of the vertical space
