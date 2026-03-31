@@ -10,6 +10,8 @@ import { Sidebar, SidebarTab } from "@/components/Sidebar"
 import { SettingsPanel, ModelSettings } from "@/components/SettingsPanel"
 import { KeysManager, useKeysManager } from "@/components/KeysManager"
 import { WelcomeView } from "@/components/welcome-view"
+import { SystemInstructions } from "@/components/SystemInstructions"
+import { GitHubSync } from "@/components/GitHubSync"
 import { GenerationView } from "@/components/generation-view"
 import { DeployDialog } from "@/components/DeployDialog"
 import { PromptLibrary } from "@/components/PromptLibrary"
@@ -289,6 +291,16 @@ export default function Home() {
                 onOpenSettings={() => setIsSettingsOpen(true)}
                 hasApiKey={!!keys[selectedProvider]?.apiKey}
                 providerName={selectedProvider.toUpperCase()}
+              />
+            )}
+
+            {activeTab === 'github' && (
+              <GitHubSync 
+                currentCode={generatedCode}
+                onCodePulled={(code) => {
+                  setGeneratedCode(code);
+                  setActiveTab('chat');
+                }}
               />
             )}
 

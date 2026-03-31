@@ -12,6 +12,7 @@ A professional, Google AI Studio-inspired web workspace that uses AI to generate
 - **System Instructions**: Guide the AI's persona and behavior with persistent system-level prompts.
 - **Live Preview & Code Editing**: Instant feedback with desktop/tablet/mobile viewports and integrated editor.
 - **Multi-Provider Support**: Seamlessly switch between Cloud (DeepSeek, OpenRouter, Google, Anthropic, Mistral, Cerebras) and Local (Ollama, LM Studio) models.
+- **GitHub Source Control**: Integrated push/pull functionality to keep your project synced with any GitHub repository.
 
 ## Tech Stack
 

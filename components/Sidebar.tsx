@@ -14,7 +14,8 @@ import {
   PlusCircle,
   Settings,
   LogOut,
-  User as UserIcon
+  User as UserIcon,
+  Github
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
@@ -26,7 +27,7 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export type SidebarTab = 'chat' | 'prompts' | 'home';
+export type SidebarTab = 'chat' | 'prompts' | 'home' | 'github';
 
 interface SidebarProps {
   activeTab: SidebarTab;
@@ -42,6 +43,7 @@ const NAV_ITEMS = [
   { id: 'home', icon: Home, label: 'Home' },
   { id: 'chat', icon: MessageSquare, label: 'Chat' },
   { id: 'prompts', icon: Terminal, label: 'Prompts' },
+  { id: 'github', icon: Github, label: 'Source Control' },
 ] as const;
 
 export function Sidebar({ 
