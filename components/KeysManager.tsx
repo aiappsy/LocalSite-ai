@@ -12,10 +12,22 @@ import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-// Custom hook for managing local storage keys
-export function useKeysManager() {
+import { createContext, useContext, ReactNode } from 'react';
+
+type KeysState = Record<string, { apiKey?: string; baseUrl?: string }>;
+
+interface KeysContextType {
+  keys: KeysState;
+  saveKey: (provider: string, apiKey?: string, baseUrl?: string) => Promise<void>;
+  removeKey: (provider: string) => Promise<void>;
+  isCloudSyncing: boolean;
+}
+
+const KeysContext = createContext<KeysContextType | undefined>(undefined);
+
+export function KeysProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [keys, setKeys] = useState<Record<string, { apiKey?: string; baseUrl?: string }>>({});
+  const [keys, setKeys] = useState<KeysState>({});
   const [isCloudSyncing, setIsCloudSyncing] = useState(false);
 
   // Load keys (Local first, then Cloud if logged in)
@@ -108,7 +120,20 @@ export function useKeysManager() {
     }
   };
 
-  return { keys, saveKey, removeKey, isCloudSyncing };
+  return (
+    <KeysContext.Provider value={{ keys, saveKey, removeKey, isCloudSyncing }}>
+      {children}
+    </KeysContext.Provider>
+  );
+}
+
+// Custom hook for managing local storage keys
+export function useKeysManager() {
+  const context = useContext(KeysContext);
+  if (context === undefined) {
+    throw new Error('useKeysManager must be used within a KeysProvider');
+  }
+  return context;
 }
 
 export function KeysManager() {
