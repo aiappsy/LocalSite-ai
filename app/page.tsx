@@ -17,7 +17,7 @@ import { DeployDialog } from "@/components/DeployDialog"
 import { PromptLibrary } from "@/components/PromptLibrary"
 import { LoadingScreen } from "@/components/loading-screen"
 import { useCodeGeneration } from "@/hooks/use-code-generation"
-import { LLMProvider, getAvailableProviders } from "@/lib/providers/config"
+import { LLMProvider, getAvailableProviders, getProviderConfig } from "@/lib/providers/config"
 import { HelpManual } from "@/components/HelpManual"
 import { useAuth } from "@/hooks/use-auth"
 import { LoginPanel } from "@/components/LoginPanel"
@@ -213,7 +213,6 @@ export default function Home() {
     if (overridePersona) setSelectedPersona(overridePersona as any)
     
     const targetPrompt = overridePrompt || prompt
-    const finalPrompt = `${targetPrompt}\n\nSTRICTLY ONLY output raw HTML code. Do NOT use markdown code blocks. Start with <!DOCTYPE html>.`
     const targetPersona = overridePersona || selectedPersona
 
     if (!targetPrompt.trim()) {
@@ -221,22 +220,40 @@ export default function Home() {
       return
     }
 
+    // Basic client-side check for configuration
+    const config = getProviderConfig(selectedProvider);
+    const hasLocalKey = !!keys[selectedProvider]?.apiKey;
+    
+    // If it's a cloud provider and no local key is set, we warn but allow trying 
+    // (it might be in server-side env vars)
+    if (!config.isLocal && !hasLocalKey) {
+      console.log(`No local key for ${selectedProvider}, relying on server environment.`);
+    }
+
+    // Prepare the final prompt with a clear instruction for HTML output
+    const finalPrompt = targetPrompt; // DESIGN_EXCELLENCE_SUFFIX is added in the hook
+
     setActiveTab('chat')
     
-    await generateCode({
-      prompt: finalPrompt,
-      model: selectedModel || (availableModels.length > 0 ? availableModels[0].id : ""),
-      provider: selectedProvider,
-      systemPromptType: systemPrompt ? 'custom' : targetPersona === 'copywriter' ? 'copywriting' : targetPersona === 'thinking' ? 'thinking' : 'default',
-      customSystemPrompt: systemPrompt,
-      temperature: modelSettings.temperature,
-      topP: modelSettings.topP,
-      topK: modelSettings.topK,
-      maxTokens: modelSettings.maxTokens,
-      customCredentials: keys,
-      isSearchEnabled,
-      attachedFiles
-    })
+    try {
+      await generateCode({
+        prompt: finalPrompt,
+        model: selectedModel || (availableModels.length > 0 ? availableModels[0].id : ""),
+        provider: selectedProvider,
+        systemPromptType: systemPrompt ? 'custom' : targetPersona === 'copywriter' ? 'copywriting' : targetPersona === 'thinking' ? 'thinking' : 'default',
+        customSystemPrompt: systemPrompt,
+        temperature: modelSettings.temperature,
+        topP: modelSettings.topP,
+        topK: modelSettings.topK,
+        maxTokens: modelSettings.maxTokens,
+        customCredentials: keys,
+        isSearchEnabled,
+        attachedFiles
+      })
+    } catch (err: any) {
+      // Errors are mostly handled in the hook via toasts, but we catch here just in case
+      console.error("Generation failed:", err);
+    }
   }
   
   const handleNewChat = () => {
@@ -368,6 +385,7 @@ export default function Home() {
               githubSettings={githubSettings}
               onGithubSettingsChange={(newSettings) => setGithubSettings(prev => ({ ...prev, ...newSettings }))}
               isLoadingModels={isLoadingModels}
+              currentCode={generatedCode}
             />
           </div>
         </SheetContent>

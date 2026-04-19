@@ -45,6 +45,23 @@ export async function POST(request: NextRequest) {
       provider = (process.env.DEFAULT_PROVIDER as LLMProvider) || LLMProvider.DEEPSEEK;
     }
 
+    // --- PRE-VALIDATION ---
+    // Check if the provider is configured (API key exists)
+    const customKey = customCredentials?.[provider]?.apiKey;
+    const customUrl = customCredentials?.[provider]?.baseUrl;
+    
+    // We import this from config to be consistent
+    const { isProviderConfigured } = await import('@/lib/providers/config');
+    
+    if (!isProviderConfigured(provider, customKey, customUrl)) {
+      return new Response(
+        JSON.stringify({ 
+          error: `Provider ${provider} is not configured. Please add your API key in the Key Manager (Engine Control) or server environment.` 
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Determine the final system prompt based on type or custom input
     let finalSystemPrompt = customSystemPrompt;
 
@@ -83,22 +100,49 @@ export async function POST(request: NextRequest) {
       async start(controller) {
         try {
           for await (const part of result.fullStream) {
+            // Log part type for debugging in dev mode
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`Stream part: ${part.type}`);
+            }
+
             if (part.type === 'text-delta') {
-              // Send text content - in AI SDK v5, the property is 'text' not 'textDelta'
-              controller.enqueue(
-                encoder.encode(JSON.stringify({ type: 'text', content: part.text }) + '\n')
-              );
+              // Get content from various possible AI SDK version properties
+              const content = (part as any).text || (part as any).delta || (part as any).textDelta;
+              if (content) {
+                controller.enqueue(
+                  encoder.encode(JSON.stringify({ type: 'text', content }) + '\n')
+                );
+              }
             } else if (part.type === 'reasoning-delta') {
-              // Send reasoning content (native reasoning models like deepseek-reasoner)
-              // In AI SDK v5, reasoning-delta uses 'text' property
+              // Get reasoning from various possible AI SDK version properties
+              const content = (part as any).text || (part as any).delta || (part as any).reasoning || (part as any).reasoningDelta;
+              if (content) {
+                controller.enqueue(
+                  encoder.encode(JSON.stringify({ type: 'reasoning', content }) + '\n')
+                );
+              }
+            } else if (part.type === 'error') {
+              console.error('AI SDK Error part:', (part as any).error);
               controller.enqueue(
-                encoder.encode(JSON.stringify({ type: 'reasoning', content: part.text }) + '\n')
+                encoder.encode(JSON.stringify({ 
+                  type: 'error', 
+                  content: (part as any).error?.message || 'AI Provider Error' 
+                }) + '\n')
               );
             }
           }
           controller.close();
         } catch (error) {
-          console.error('Stream error:', error);
+          console.error('Stream processing error:', error);
+          // If we fail during streaming, send an error part if possible
+          try {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown stream error';
+            controller.enqueue(
+              encoder.encode(JSON.stringify({ type: 'error', content: errorMessage }) + '\n')
+            );
+          } catch (e) {
+            // Ignore if controller is already closed
+          }
           controller.error(error);
         }
       },

@@ -18,7 +18,7 @@ interface GenerateCodeParams {
 
 // Interface for NDJSON stream parts
 interface StreamPart {
-    type: 'text' | 'reasoning'
+    type: 'text' | 'reasoning' | 'error'
     content: string
 }
 
@@ -123,15 +123,16 @@ ${DESIGN_EXCELLENCE_SUFFIX}
             })
 
             if (!response.ok) {
+                let errorMsg = `HTTP error! status: ${response.status}`;
                 try {
                     const errorData = await response.json()
                     if (errorData && errorData.error) {
-                        throw new Error(errorData.error)
+                        errorMsg = errorData.error;
                     }
                 } catch (jsonError) {
                     // Ignore json parse error
                 }
-                throw new Error(`HTTP error! status: ${response.status}`)
+                throw new Error(errorMsg)
             }
 
             const reader = response.body?.getReader()
@@ -167,13 +168,25 @@ ${DESIGN_EXCELLENCE_SUFFIX}
 
                         if (part.type === 'text') {
                             codeBuffer += part.content
-                            // Robust extraction: try to find <!DOCTYPE html> ... </html>
-                            const htmlMatch = codeBuffer.match(/<!DOCTYPE html>[\s\S]*?<\/html>/i);
+                            
+                            // 1. Try to find complete HTML structure
+                            const htmlMatch = codeBuffer.match(/<!DOCTYPE html>[\s\S]*?<\/html>|<html>[\s\S]*?<\/html>/i);
                             if (htmlMatch) {
                                 setGeneratedCode(htmlMatch[0]);
                             } else {
-                                // Fallback: strip markdown if present
-                                setGeneratedCode(codeBuffer.replace(/^```html\n/, '').replace(/```$/, '').trim());
+                                // 2. Robust markdown block extraction
+                                // Match anything between ```html and ``` or just between ``` and ```
+                                const blockMatch = codeBuffer.match(/```(?:html|xml|markdown)?\n?([\s\S]*?)(?:```|$)/i);
+                                if (blockMatch && blockMatch[1].trim()) {
+                                    setGeneratedCode(blockMatch[1].trim());
+                                } else {
+                                    // 3. Fallback: try to strip delimiters if they exist at start/end
+                                    const cleanCode = codeBuffer
+                                        .replace(/^```(?:html|xml|markdown)?\n?/, '')
+                                        .replace(/```$/, '')
+                                        .trim();
+                                    setGeneratedCode(cleanCode);
+                                }
                             }
                         } else if (part.type === 'reasoning') {
                             if (!hasReceivedReasoning) {
@@ -182,11 +195,15 @@ ${DESIGN_EXCELLENCE_SUFFIX}
                             }
                             reasoningBuffer += part.content
                             setThinkingOutput(reasoningBuffer)
+                        } else if (part.type === 'error') {
+                            throw new Error(part.content || 'Error from AI stream');
                         }
-                    } catch (parseError) {
-                        // If JSON parse fails, it might be legacy plain text format
-                        // Try to handle it gracefully
-                        console.warn('Failed to parse stream part:', line, parseError)
+                    } catch (parseError: any) {
+                        if (parseError.message && (parseError.message.includes('JSON') || parseError.message.includes('Unexpected token'))) {
+                            console.warn('Failed to parse stream part:', line, parseError)
+                        } else {
+                            throw parseError; // Rethrow if it's our manual error from line 186
+                        }
                     }
                 }
             }
@@ -196,14 +213,17 @@ ${DESIGN_EXCELLENCE_SUFFIX}
                 try {
                     const part: StreamPart = JSON.parse(lineBuffer)
                     if (part.type === 'text') {
-                        codeBuffer += part.content
-                        setGeneratedCode(codeBuffer.replace(/^```html\n/, '').replace(/```$/, ''))
+                        codeBuffer += (part.content || "")
+                        setGeneratedCode(codeBuffer.replace(/^```html\n?/, '').replace(/```$/, '').trim())
                     } else if (part.type === 'reasoning') {
-                        reasoningBuffer += part.content
+                        reasoningBuffer += (part.content || "")
                         setThinkingOutput(reasoningBuffer)
+                    } else if (part.type === 'error') {
+                        throw new Error(part.content || 'Error from AI stream');
                     }
-                } catch {
-                    // Ignore parse errors for incomplete lines
+                } catch (e: any) {
+                    // Rethrow if it's our manual error
+                    if (e.message && e.message.includes('Error from AI stream')) throw e;
                 }
             }
 

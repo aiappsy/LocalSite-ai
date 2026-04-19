@@ -62,7 +62,7 @@ export function HelpManual({ isOpen, onClose }: HelpManualProps) {
                 Step 1: Unlocking the Engine (API Keys)
               </h2>
               <div className="bg-slate-900/50 border border-slate-800 p-8 rounded-3xl space-y-6">
-                <p className="text-slate-300">To start building, you need to connect your engine. WebCrafter uses **OpenRouter** to access the world's best AI models securely.</p>
+                <p className="text-slate-300">WebCrafter is built for **Professional Independence**. By connecting your own API keys, you bypass corporate markups, access industry-low rates, and maintain 100% control over your data and model choices.</p>
                 <ol className="space-y-4">
                   <li className="flex gap-4">
                     <span className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold shrink-0 mt-1">1</span>
@@ -77,12 +77,16 @@ export function HelpManual({ isOpen, onClose }: HelpManualProps) {
                     <p><span className="text-white font-medium text-lg">Connect:</span> In WebCrafter, click the **⚙️ Settings** icon → **API Keys** → Paste your key.</p>
                   </li>
                 </ol>
-                <div className="mt-8 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex gap-4">
-                  <ShieldCheck className="w-6 h-6 text-blue-400 shrink-0" />
-                  <p className="text-sm text-slate-400 leading-relaxed">
-                    <span className="text-blue-300 font-bold uppercase text-[10px] tracking-widest block mb-1">Security Note</span>
-                    Your key is stored **locally in your browser**. It never leaves your device except to communicate directly with the AI provider.
-                  </p>
+                <div className="mt-8 p-6 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex gap-4">
+                  <ShieldCheck className="w-8 h-8 text-blue-400 shrink-0" />
+                  <div>
+                    <p className="text-blue-300 font-bold uppercase text-[10px] tracking-widest block mb-2">Professional Advantages</p>
+                    <ul className="text-sm text-slate-400 space-y-2">
+                       <li><span className="text-blue-200">✓ No Middleman Markup:</span> Pay only for what you use, directly to the AI providers.</li>
+                       <li><span className="text-blue-200">✓ Privacy First:</span> Your code generation stays within your own accounts.</li>
+                       <li><span className="text-blue-200">✓ Model Freedom:</span> Switch between DeepSeek, Claude, or Gemini instantly.</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </section>

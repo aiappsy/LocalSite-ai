@@ -170,8 +170,14 @@ export function KeysManager() {
             </CardTitle>
             <div className="flex gap-2">
               <a 
-                href={providerId === LLMProvider.GOOGLE ? "https://aistudio.google.com/app/apikey" : 
-                      providerId === LLMProvider.OPENROUTER ? "https://openrouter.ai/keys" : "#"}
+                href={
+                  providerId === LLMProvider.DEEPSEEK ? "https://platform.deepseek.com/api_keys" :
+                  providerId === LLMProvider.ANTHROPIC ? "https://console.anthropic.com/settings/keys" :
+                  providerId === LLMProvider.MISTRAL ? "https://console.mistral.ai/api-keys/" :
+                  providerId === LLMProvider.CEREBRAS ? "https://cloud.cerebras.ai/" :
+                  providerId === LLMProvider.GOOGLE ? "https://aistudio.google.com/app/apikey" : 
+                  providerId === LLMProvider.OPENROUTER ? "https://openrouter.ai/settings/keys" : "#"
+                }
                 target="_blank"
                 rel="noreferrer"
                 className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
@@ -249,7 +255,7 @@ export function KeysManager() {
     <div className="flex flex-col h-full max-w-4xl mx-auto p-6 overflow-y-auto custom-scrollbar">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-          <Key className="w-6 h-6 text-blue-500" /> API Keys Management
+          <Key className="w-6 h-6 text-blue-500" /> Aiappsy WebCrafter: Engine Control
         </h1>
         <p className="text-slate-400 text-sm">
           Connect your favorite AI providers. For security, your API keys are stored only in your browser's local storage and are never sent to our database.

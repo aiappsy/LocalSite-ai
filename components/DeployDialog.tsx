@@ -62,13 +62,14 @@ export function DeployDialog({ isOpen, onClose, code, githubSettings, onPullCode
       const savedUrl = localStorage.getItem('coolify-url');
       const savedToken = localStorage.getItem('coolify-token');
       
+      const targetUrl = savedUrl || "https://coolify.aiappsy.com";
+      const targetToken = savedToken || "";
+      
       if (savedUrl) setCoolifyUrl(savedUrl);
       if (savedToken) setCoolifyToken(savedToken);
       
-      // Auto-validate if have enough info or if we should check server secrets
-      if (!projects.length) {
-        validateConnection(savedUrl || coolifyUrl, savedToken || "");
-      }
+      // Auto-validate immediately to check for server-side configs
+      validateConnection(targetUrl, targetToken);
     }
   }, [isOpen]);
 
@@ -313,10 +314,13 @@ export function DeployDialog({ isOpen, onClose, code, githubSettings, onPullCode
                     <Input 
                       id="coolify-token" 
                       type="password" 
-                      placeholder="Enter token (or leave blank for server secret)..." 
-                      className="bg-slate-900 border-slate-800 h-10 text-xs flex-1 placeholder:text-slate-600"
+                      placeholder={isUsingServerToken ? "Connected via Server Secret" : "Enter token (or leave blank for server secret)..."} 
+                      className={`bg-slate-900 border-slate-800 h-10 text-xs flex-1 placeholder:text-slate-600 ${isUsingServerToken ? "border-blue-500/50 text-blue-400" : ""}`}
                       value={coolifyToken}
-                      onChange={(e) => setCoolifyToken(e.target.value)}
+                      onChange={(e) => {
+                        setCoolifyToken(e.target.value);
+                        if (isUsingServerToken) setIsUsingServerToken(false);
+                      }}
                     />
                     <Button 
                       variant="secondary" 

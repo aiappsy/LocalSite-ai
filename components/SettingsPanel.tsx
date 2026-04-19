@@ -11,17 +11,11 @@ import {
   Zap,
   Shield,
   Key,
-  CheckCircle2,
-  AlertCircle,
-  ExternalLink,
-  Eye,
-  EyeOff,
-  Save,
-  Wand2,
-  FlaskConical,
-  TestTube2,
-  Loader2,
-  Terminal
+  Terminal,
+  Send,
+  Download,
+  RefreshCw,
+  ShieldCheck
 } from 'lucide-react';
 import { 
   Select, 
@@ -75,6 +69,7 @@ interface SettingsPanelProps {
   githubSettings: { token: string; owner: string; repo: string; path: string };
   onGithubSettingsChange: (settings: Partial<{ token: string; owner: string; repo: string; path: string }>) => void;
   isLoadingModels?: boolean;
+  currentCode: string;
 }
 
 export function SettingsPanel({
@@ -91,11 +86,15 @@ export function SettingsPanel({
   onPersonaChange,
   githubSettings,
   onGithubSettingsChange,
-  isLoadingModels
+  isLoadingModels,
+  currentCode
 }: SettingsPanelProps) {
   const { keys, saveKey } = useKeysManager();
   const [activeTab, setActiveTab] = useState("setup");
   const [isTesting, setIsTesting] = useState(false);
+  const [isPushing, setIsPushing] = useState(false);
+  const [isPulling, setIsPulling] = useState(false);
+  const [commitMessage, setCommitMessage] = useState('Sync from Aiappsy WebCrafter');
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
 
   const toggleKeyVisibility = (pId: string) => {
@@ -148,6 +147,66 @@ export function SettingsPanel({
       maxTokens: 4096,
     });
     toast.info("Settings reset to defaults");
+  };
+
+  const handlePush = async () => {
+    if (!githubSettings.token || !githubSettings.owner || !githubSettings.repo || !githubSettings.path) {
+      toast.error('Please fill in all GitHub settings first.');
+      return;
+    }
+
+    setIsPushing(true);
+    try {
+      const response = await fetch('/api/github/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...githubSettings,
+          content: currentCode,
+          message: commitMessage
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Successfully pushed to GitHub!');
+      } else {
+        throw new Error(data.error || 'Failed to push to GitHub');
+      }
+    } catch (error: any) {
+      console.error('Push Error:', error);
+      toast.error(`Push failed: ${error.message}`);
+    } finally {
+      setIsPushing(false);
+    }
+  };
+
+  const handlePull = async () => {
+    if (!githubSettings.token || !githubSettings.owner || !githubSettings.repo || !githubSettings.path) {
+      toast.error('Please fill in all GitHub settings first.');
+      return;
+    }
+
+    setIsPulling(true);
+    try {
+      const response = await fetch('/api/github/pull', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(githubSettings)
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Successfully connected to GitHub! Use the GitHub sync tab to import code.');
+      } else {
+        throw new Error(data.error || 'Failed to connect to GitHub');
+      }
+    } catch (error: any) {
+      console.error('Connection Error:', error);
+      toast.error(`Connection failed: ${error.message}`);
+    } finally {
+      setIsPulling(false);
+    }
   };
 
   return (
@@ -607,6 +666,37 @@ export function SettingsPanel({
                 <div className="text-[11px] text-slate-400 leading-relaxed">
                   Two-way synchronization allows you to <span className="text-blue-400 font-bold">Push</span> current code to GitHub or <span className="text-blue-400 font-bold">Pull</span> existing code from a repository. This is great for version control and collaborating on designs.
                 </div>
+              </div>
+
+              <div className="space-y-4 pt-2">
+                <Label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Sync Operations</Label>
+                <div className="space-y-3 p-4 bg-slate-950/50 border border-slate-800 rounded-xl">
+                  <Input
+                    placeholder="Commit message..."
+                    className="bg-slate-950 border-slate-800 focus-visible:ring-blue-500 text-xs h-8"
+                    value={commitMessage}
+                    onChange={(e) => setCommitMessage(e.target.value)}
+                  />
+                  <Button 
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center gap-2"
+                    onClick={handlePush}
+                    disabled={isPushing || !currentCode}
+                  >
+                    {isPushing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    Push Code to GitHub
+                  </Button>
+                </div>
+
+                <Button 
+                  variant="ghost"
+                  className="w-full text-slate-400 hover:text-white flex items-center gap-2"
+                  onClick={handlePull}
+                  disabled={isPulling}
+                >
+                  {isPulling ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                  Verify Repo Connection
+                </Button>
+              </div>
               </div>
             </div>
           </TabsContent>

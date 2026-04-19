@@ -12,6 +12,7 @@ interface Provider {
   name: string
   description: string
   isLocal: boolean
+  examples?: string[]
 }
 
 interface ProviderSelectorProps {
@@ -51,7 +52,7 @@ export function ProviderSelector({
               const { defaultProvider } = await defaultResponse.json()
 
               // Check if the default provider is in the list of available providers
-              const providerExists = data.some(p => p.id === defaultProvider)
+              const providerExists = data.some((p: Provider) => p.id === defaultProvider)
 
               if (providerExists) {
                 setSelectedProvider(defaultProvider)
