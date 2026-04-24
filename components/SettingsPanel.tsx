@@ -216,6 +216,10 @@ export function SettingsPanel({
       console.error('Connection Error:', error);
       toast.error(`Connection failed: ${error.message}`);
     } finally {
+      setIsPulling(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-[#131314] w-full overflow-hidden border-l border-white/5">
       {/* Header */}
