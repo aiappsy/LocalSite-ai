@@ -1,15 +1,36 @@
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Laptop, Smartphone, Tablet, Copy, RefreshCw, Loader2, Save, ArrowRight, Globe, Paperclip, X, Image as ImageIcon, AlertTriangle, Share2, Brain } from "lucide-react"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { CodeEditor } from "@/components/code-editor"
 import { WorkSteps } from "@/components/work-steps"
 import { getModelCapabilities } from "@/lib/providers/capabilities"
 import { SystemInstructions } from "@/components/SystemInstructions"
-import { useRef } from "react"
+import { useRef, useState } from "react"
+import { 
+    Maximize2,
+    ExternalLink,
+    Smartphone,
+    Tablet,
+    Laptop,
+    Copy,
+    RefreshCw,
+    Loader2,
+    Save,
+    ArrowRight,
+    Globe,
+    Paperclip,
+    X,
+    Image as ImageIcon,
+    AlertTriangle,
+    Share2,
+    Brain
+} from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { 
     Tooltip,
     TooltipContent,
@@ -232,6 +253,16 @@ export function PreviewPanel({
     isLiveEditEnabled,
     setIsLiveEditEnabled
 }: PreviewPanelProps) {
+    const [isMaximized, setIsMaximized] = useState(false);
+
+    // -----------------------------------------------------------------------------
+    // Helper: Open in New Tab
+    // -----------------------------------------------------------------------------
+    const openInNewTab = () => {
+        const blob = new Blob([previewContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+    };
 
     // -----------------------------------------------------------------------------
     // Inline Edit Script Injection
@@ -376,8 +407,62 @@ export function PreviewPanel({
                     >
                         DEPLOY
                     </Button>
+                    <div className="h-3 w-px bg-white/5 mx-1" />
+                    <TooltipProvider>
+                        <div className="flex items-center gap-1">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 rounded-md hover:bg-white/5"
+                                        onClick={() => setIsMaximized(true)}
+                                        disabled={!originalCode && !editedCode}
+                                    >
+                                        <Maximize2 className="w-3 h-3 text-slate-500" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Maximize Preview</TooltipContent>
+                            </Tooltip>
+                            
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 rounded-md hover:bg-white/5"
+                                        onClick={openInNewTab}
+                                        disabled={!originalCode && !editedCode}
+                                    >
+                                        <ExternalLink className="w-3 h-3 text-slate-500" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Open in New Tab</TooltipContent>
+                            </Tooltip>
+                        </div>
+                    </TooltipProvider>
                 </div>
             </div>
+
+            {/* Maximized Modal */}
+            <Dialog open={isMaximized} onOpenChange={setIsMaximized}>
+                <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] bg-[#1c1c1f] border-white/5 p-0 overflow-hidden flex flex-col">
+                    <DialogHeader className="px-4 py-2 border-b border-white/5 flex flex-row items-center justify-between">
+                        <DialogTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                            Studio Masterpiece Preview
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="flex-1 w-full relative bg-white">
+                        <iframe
+                            key={`fs-${previewKey}`}
+                            srcDoc={finalContent}
+                            className="w-full h-full border-none"
+                            title="Full Screen Preview"
+                            sandbox="allow-scripts allow-same-origin"
+                        />
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Iframe Viewport Area */}
             <div className="flex-1 p-3 flex items-center justify-center overflow-hidden">
