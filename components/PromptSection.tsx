@@ -204,7 +204,6 @@ export function PromptSection({
                     <span className="text-[9px] font-mono text-slate-600 uppercase">Last:</span>
                     <span className="text-[10px] text-slate-400 truncate italic">"{previousPrompt}"</span>
                 </div>
-            )}
         </div>
         
         <WorkSteps
