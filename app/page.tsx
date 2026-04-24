@@ -248,7 +248,8 @@ export default function Home() {
         maxTokens: modelSettings.maxTokens,
         customCredentials: keys,
         isSearchEnabled,
-        attachedFiles
+        attachedFiles,
+        previousCode: generatedCode
       })
     } catch (err: any) {
       // Errors are mostly handled in the hook via toasts, but we catch here just in case
@@ -267,129 +268,148 @@ export default function Home() {
   // if (!user && !guestMode) return <LoginPanel onSkip={() => setGuestMode(true)} />
 
   return (
-    <div className="flex h-screen w-full bg-slate-950 overflow-hidden text-slate-200">
+    <div className="flex h-screen w-full bg-[#020617] overflow-hidden text-slate-200 mesh-gradient">
       <Toaster position="top-right" theme="dark" />
       
       {/* Help Manual Modal */}
       <HelpManual isOpen={isHelpManualOpen} onClose={() => setIsHelpManualOpen(false)} />
       
-      <ResizablePanelGroup direction="horizontal">
-        {/* Left Sidebar */}
+      <ResizablePanelGroup direction="horizontal" className="h-full items-stretch">
+        {/* PANE 1: Left Navigation Sidebar */}
         <ResizablePanel 
-          defaultSize={isSidebarCollapsed ? 4 : 16} 
+          defaultSize={isSidebarCollapsed ? 4 : 14} 
           minSize={4} 
-          maxSize={20}
+          maxSize={18}
           collapsible={true}
           onCollapse={() => setIsSidebarCollapsed(true)}
           onExpand={() => setIsSidebarCollapsed(false)}
-          className="transition-all duration-300"
+          className="studio-sidebar z-50 glass"
         >
-          <Sidebar 
-            activeTab={activeTab} 
-            onTabChange={setActiveTab}
-            isCollapsed={isSidebarCollapsed}
-            setIsCollapsed={setIsSidebarCollapsed}
-            onOpenHelp={() => setIsHelpManualOpen(true)}
-            onNewChat={handleNewChat}
-            onToggleSettings={() => setIsSettingsOpen(true)}
-          />
+          <div className="flex flex-col h-full">
+            <Sidebar 
+              activeTab={activeTab} 
+              onTabChange={setActiveTab}
+              isCollapsed={isSidebarCollapsed}
+              setIsCollapsed={setIsSidebarCollapsed}
+              onOpenHelp={() => setIsHelpManualOpen(true)}
+              onNewChat={handleNewChat}
+              onToggleSettings={() => setIsSettingsOpen(!isSettingsOpen)}
+            />
+          </div>
         </ResizablePanel>
 
-        <ResizableHandle withHandle className="bg-slate-800" />
+        <ResizableHandle withHandle className="bg-white/5 w-1 hover:bg-blue-500/30 transition-colors" />
 
-        {/* Middle Content Area */}
-        <ResizablePanel defaultSize={84} minSize={30}>
-          <div className="flex flex-col h-full overflow-hidden bg-slate-950">
-            {activeTab === 'home' && (
-              <WelcomeView 
-                prompt={prompt}
-                setPrompt={setPrompt}
-                onGenerate={() => handleGenerate()}
-                onOpenSettings={() => setIsSettingsOpen(true)}
-                hasApiKey={!!keys[selectedProvider]?.apiKey}
-                providerName={selectedProvider.toUpperCase()}
-              />
-            )}
+        {/* PANE 2: Main Workspace Content */}
+        <ResizablePanel defaultSize={61} minSize={30}>
+          <div className="flex flex-col h-full overflow-hidden bg-transparent">
+            {/* Studio Header */}
+            <StudioHeader 
+              activeTab={activeTab}
+              isGenerating={isGenerating}
+              onDeploy={() => setIsDeployDialogOpen(true)}
+              onNewChat={handleNewChat}
+            />
 
-            {activeTab === 'github' && (
-              <GitHubSync 
-                currentCode={generatedCode}
-                onCodePulled={(code) => {
-                  setGeneratedCode(code);
-                  setActiveTab('chat');
-                }}
-              />
-            )}
+            <div className="flex-1 overflow-hidden relative">
+              {activeTab === 'home' && (
+                <WelcomeView 
+                  prompt={prompt}
+                  setPrompt={setPrompt}
+                  onGenerate={() => handleGenerate()}
+                  onOpenSettings={() => setIsSettingsOpen(true)}
+                  hasApiKey={!!keys[selectedProvider]?.apiKey}
+                  providerName={selectedProvider.toUpperCase()}
+                />
+              )}
 
-            {activeTab === 'chat' && (
-              <div className="flex flex-col h-full">
-                <div className="flex-1 overflow-hidden">
-                  <GenerationView 
-                    prompt={prompt}
-                    setPrompt={setPrompt}
-                    model={selectedModel}
-                    provider={selectedProvider}
-                    generatedCode={generatedCode}
-                    isGenerating={isGenerating}
-                    generationComplete={generationComplete}
-                    onRegenerateWithNewPrompt={handleGenerate}
-                    thinkingOutput={thinkingOutput}
-                    isThinking={isThinking}
-                    isSearchEnabled={isSearchEnabled}
-                    setIsSearchEnabled={setIsSearchEnabled}
-                    attachedFiles={attachedFiles}
-                    setAttachedFiles={setAttachedFiles}
-                    onDeploy={() => setIsDeployDialogOpen(true)}
-                    selectedPersona={selectedPersona}
-                    onPersonaChange={setSelectedPersona}
-                    systemPrompt={systemPrompt}
-                    setSystemPrompt={setSystemPrompt}
-                  />
+              {activeTab === 'github' && (
+                <GitHubSync 
+                  currentCode={generatedCode}
+                  onCodePulled={(code) => {
+                    setGeneratedCode(code);
+                    setActiveTab('chat');
+                  }}
+                />
+              )}
+
+              {activeTab === 'chat' && (
+                <div className="flex flex-col h-full">
+                  <div className="flex-1 overflow-hidden">
+                    <GenerationView 
+                      prompt={prompt}
+                      setPrompt={setPrompt}
+                      model={selectedModel}
+                      provider={selectedProvider}
+                      generatedCode={generatedCode}
+                      isGenerating={isGenerating}
+                      generationComplete={generationComplete}
+                      onRegenerateWithNewPrompt={handleGenerate}
+                      thinkingOutput={thinkingOutput}
+                      isThinking={isThinking}
+                      isSearchEnabled={isSearchEnabled}
+                      setIsSearchEnabled={setIsSearchEnabled}
+                      attachedFiles={attachedFiles}
+                      setAttachedFiles={setAttachedFiles}
+                      onDeploy={() => setIsDeployDialogOpen(true)}
+                      selectedPersona={selectedPersona}
+                      onPersonaChange={setSelectedPersona}
+                      systemPrompt={systemPrompt}
+                      setSystemPrompt={setSystemPrompt}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
+              {activeTab === 'prompts' && (
+                <PromptLibrary onSelect={handleGenerate} />
+              )}
+            </div>
+          </div>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle className="bg-white/5 w-1 hover:bg-blue-500/30 transition-colors" />
+
+        {/* PANE 3: Right Studio Parameters (Google AI Studio Style) */}
+        <ResizablePanel 
+          defaultSize={25} 
+          minSize={20} 
+          maxSize={35}
+          className="studio-right-panel glass h-full"
+        >
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="studio-panel-header flex justify-between items-center px-4 h-12 border-b border-white/5">
+              <span className="flex items-center gap-2">
+                <Settings2 className="w-3.5 h-3.5" />
+                Parameters
+              </span>
+              <Badge variant="outline" className="text-[10px] uppercase font-mono opacity-50 h-5 px-1.5 border-white/10">
+                Studio Mode
+              </Badge>
+            </div>
             
-            {activeTab === 'prompts' && (
-              <PromptLibrary onSelect={handleGenerate} />
-            )}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-0">
+              <SettingsPanel 
+                provider={selectedProvider}
+                model={selectedModel}
+                models={availableModels}
+                settings={modelSettings}
+                onProviderChange={setSelectedProvider}
+                onModelChange={setSelectedModel}
+                onSettingsChange={(newSettings) => setModelSettings(prev => ({ ...prev, ...newSettings }))}
+                systemPrompt={systemPrompt}
+                onSystemPromptChange={setSystemPrompt}
+                selectedPersona={selectedPersona}
+                onPersonaChange={setSelectedPersona}
+                githubSettings={githubSettings}
+                onGithubSettingsChange={(newSettings) => setGithubSettings(prev => ({ ...prev, ...newSettings }))}
+                isLoadingModels={isLoadingModels}
+                currentCode={generatedCode}
+              />
+            </div>
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
-
-      {/* Model Settings Sheet */}
-      <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <SheetContent className="w-[400px] sm:w-[540px] bg-slate-950 border-slate-800 p-0 overflow-y-auto">
-          <SheetHeader className="p-6 border-b border-slate-800">
-            <SheetTitle className="text-white flex items-center gap-2">
-              <Settings2 className="w-5 h-5 text-blue-400" />
-              Model Configuration
-            </SheetTitle>
-            <SheetDescription className="text-slate-400">
-              Fine-tune the AI model parameters for your project.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="p-0">
-            <SettingsPanel 
-              provider={selectedProvider}
-              model={selectedModel}
-              models={availableModels}
-              settings={modelSettings}
-              onProviderChange={setSelectedProvider}
-              onModelChange={setSelectedModel}
-              onSettingsChange={(newSettings) => setModelSettings(prev => ({ ...prev, ...newSettings }))}
-              systemPrompt={systemPrompt}
-              onSystemPromptChange={setSystemPrompt}
-              selectedPersona={selectedPersona}
-              onPersonaChange={setSelectedPersona}
-              githubSettings={githubSettings}
-              onGithubSettingsChange={(newSettings) => setGithubSettings(prev => ({ ...prev, ...newSettings }))}
-              isLoadingModels={isLoadingModels}
-              currentCode={generatedCode}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
 
       {/* Deploy Dialog */}
       <DeployDialog 
@@ -401,8 +421,8 @@ export default function Home() {
       />
 
       {/* Version Footer */}
-      <div className="fixed bottom-4 right-4 text-[10px] text-slate-500 font-mono pointer-events-none opacity-50">
-        v1.0.8-stable | Guest Mode Active
+      <div className="fixed bottom-4 left-4 text-[10px] text-slate-500 font-mono pointer-events-none opacity-50 z-50">
+        WEB CRAFTER STUDIO | v1.2.0-ELITE
       </div>
     </div>
   )

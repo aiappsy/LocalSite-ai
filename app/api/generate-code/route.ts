@@ -18,7 +18,8 @@ export async function POST(request: NextRequest) {
       topK,
       customCredentials,
       isSearchEnabled,
-      attachedFiles
+      attachedFiles,
+      previousCode
     } = await request.json();
 
     // Check if prompt and model are provided
@@ -89,6 +90,7 @@ export async function POST(request: NextRequest) {
         topK: parsedTopK,
         isSearchEnabled,
         attachedFiles,
+        previousCode,
         // We'll pass custom credentials if they exist for this provider
         ...(customCredentials?.[provider] || {})
       }

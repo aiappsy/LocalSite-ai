@@ -481,6 +481,7 @@ export async function generateCodeStream(
     baseUrl?: string;
     isSearchEnabled?: boolean;
     attachedFiles?: { name: string, type: string, data: string }[];
+    previousCode?: string;
   }
 ): Promise<ReturnType<typeof streamText>> {
   const client = createProviderClient(provider, options?.apiKey, options?.baseUrl);
@@ -490,10 +491,34 @@ export async function generateCodeStream(
     topK: options?.topK,
   });
   
-  const messages: any[] = [{ role: 'user', content: prompt }];
+  let messages: any[] = [];
+  
+  // Refine the prompt for iterative updates
+  let currentPrompt = prompt;
+  if (options?.previousCode) {
+    currentPrompt = `
+I have some existing code that I need you to update.
+
+EXISTING CODE:
+${options.previousCode}
+
+USER REQUEST FOR UPDATES:
+${prompt}
+
+Please apply the requested changes to the existing code and output the COMPLETE upgraded HTML file.
+IMPORTANT RULES:
+1. Output ONLY the raw HTML code.
+2. Start with <!DOCTYPE html> and end with </html>.
+3. Incorporate all requested updates while preserving existing functionality unless asked to change it.
+4. Do NOT include any markdown code blocks or explanations.
+5. The output must be a complete, self-contained file including all CSS and JS.
+`.trim();
+  }
+
+  messages = [{ role: 'user', content: currentPrompt }];
 
   if (options?.attachedFiles && options.attachedFiles.length > 0) {
-    const parts: any[] = [{ type: 'text', text: prompt }];
+    const parts: any[] = [{ type: 'text', text: currentPrompt }];
     options.attachedFiles.forEach(file => {
       try {
         const base64Content = file.data.split(',')[1];

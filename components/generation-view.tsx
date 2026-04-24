@@ -265,48 +265,64 @@ export function GenerationView({
   }
 
   return (
-    <div className="h-full bg-slate-950 text-white flex flex-col overflow-hidden">
+    <div className="h-full bg-transparent text-white flex flex-col overflow-hidden">
       {/* Reasoning/Thinking Indicator if active */}
       {thinkingOutput && (
-        <div className="bg-blue-600/5 border-b border-blue-600/10 p-2 flex items-center justify-center">
+        <div className="bg-blue-600/5 border-b border-white/5 p-1.5 flex items-center justify-center relative overflow-hidden group">
+           <div className="absolute inset-0 bg-blue-500/5 animate-pulse" />
            <ThinkingIndicator
               thinkingOutput={thinkingOutput}
               isThinking={isThinking}
               position="top-right"
             />
+            <span className="text-[10px] font-mono text-blue-400/60 uppercase tracking-[0.2em] ml-2 z-10">
+              Architectural Reasoning Active
+            </span>
         </div>
       )}
 
-      {/* Tab-Navigation - Unified for Desktop & Mobile */}
-      <div className="flex border-b border-white/5 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-20">
-        <button
-          className={`flex-1 py-3 text-xs font-bold tracking-widest transition-all duration-300 ${activeTab === "code" 
-            ? "text-blue-400 border-b-2 border-blue-500 bg-blue-500/5" 
-            : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
-          }`}
-          onClick={() => setActiveTab("code")}
-        >
-          CODE
-        </button>
-        <button
-          className={`flex-1 py-3 text-xs font-bold tracking-widest transition-all duration-300 ${activeTab === "preview" 
-            ? "text-blue-400 border-b-2 border-blue-500 bg-blue-500/5" 
-            : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
-          }`}
-          onClick={() => setActiveTab("preview")}
-        >
-          PREVIEW
-        </button>
+      {/* Tab-Navigation - Studio Style */}
+      <div className="flex px-4 items-center bg-slate-950/20 backdrop-blur-md border-b border-white/5 h-10 sticky top-0 z-20">
+        <div className="flex gap-1 h-full items-center">
+          <button
+            className={`px-4 py-1.5 text-[11px] font-bold tracking-widest transition-all rounded-lg ${activeTab === "code" 
+              ? "text-blue-200 bg-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.15)]" 
+              : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+            }`}
+            onClick={() => setActiveTab("code")}
+          >
+            CODE
+          </button>
+          <button
+            className={`px-4 py-1.5 text-[11px] font-bold tracking-widest transition-all rounded-lg ${activeTab === "preview" 
+              ? "text-blue-200 bg-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.15)]" 
+              : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+            }`}
+            onClick={() => setActiveTab("preview")}
+          >
+            PREVIEW
+          </button>
+        </div>
+        
+        <div className="flex-1" />
+        
+        <div className="flex items-center gap-2">
+          {generationComplete && (
+            <Badge variant="outline" className="h-6 text-[10px] font-mono border-white/10 text-emerald-400 bg-emerald-500/5">
+              COMPILED
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Main Content - Unified Tabbed View */}
       <div className="flex-1 flex overflow-hidden relative">
         {activeTab === "code" ? (
-          <div className="w-full h-full animate-in fade-in slide-in-from-left-4 duration-300">
+          <div className="w-full h-full animate-in fade-in zoom-in-95 duration-500">
             <CodePanel {...codePanelProps} />
           </div>
         ) : (
-          <div className="w-full h-full animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="w-full h-full animate-in fade-in zoom-in-95 duration-500">
             <PreviewPanel {...previewPanelProps} />
           </div>
         )}

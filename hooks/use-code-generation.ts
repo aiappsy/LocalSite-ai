@@ -14,6 +14,7 @@ interface GenerateCodeParams {
     customCredentials?: Record<string, { apiKey?: string; baseUrl?: string }>
     isSearchEnabled?: boolean
     attachedFiles?: File[]
+    previousCode?: string
 }
 
 // Interface for NDJSON stream parts
@@ -24,14 +25,16 @@ interface StreamPart {
 
 const DESIGN_EXCELLENCE_SUFFIX = `
 
-## ELITE DESIGN ENFORCEMENT
-- Use Tailwind CSS v3 (Play CDN) for all styling.
-- Use GSAP (CDN) for entrance and scroll animations.
-- Use Lucide Icons (CDN) with lucide.createIcons() initialization.
-- Implement a 'Bento Box' or 'Glassmorphism' layout.
-- Use premium Google Fonts (Outfit, Playfair Display).
-- Ensure 100% mobile responsiveness.
-- STRICTLY ONLY output raw HTML. No markdown code blocks.
+## ELITE MASTERPIECE MANDATE (CRITICAL)
+- Apply a deep, premium dark theme: Background hsl(222 47% 4%), Surfaces hsl(222 47% 7%).
+- Use Glassmorphism (backdrop-blur-xl + bg-white/5) for all cards.
+- Implement a structured Bento Grid layout for information density.
+- Use GSAP (https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js) for staggered entrance animations.
+- Use Lucide Icons (https://unpkg.com/lucide@latest) with initialization.
+- Every button MUST have hover:scale-[1.02] and hover:shadow-[0_0_20px_rgba(59,130,246,0.3)].
+- Ensure high-fidelity typography (Outfit for headings, Inter for UI).
+- AUTOMATICALLY include Meta Tags (Title, Description) and OpenGraph tags.
+- STRICTLY output the RAW HTML code only. No markdown blocks.
 `;
 
 export function useCodeGeneration() {
@@ -53,7 +56,8 @@ export function useCodeGeneration() {
         customSystemPrompt,
         customCredentials,
         isSearchEnabled,
-        attachedFiles
+        attachedFiles,
+        previousCode
     }: GenerateCodeParams) => {
         if (!prompt.trim() || !model || !provider) {
             toast.error("Please enter a prompt and select a provider and model.")
@@ -61,16 +65,18 @@ export function useCodeGeneration() {
         }
 
         const finalPrompt = `
-### USER'S PRIMARY REQUEST (CRITICAL PRIORITY):
+### PROJECT REQUIREMENTS:
 ${prompt}
 
 ---
-### ELITE DESIGN SPECIFICATIONS (Apply to the request above):
+### TECHNICAL SPECIFICATIONS:
 ${DESIGN_EXCELLENCE_SUFFIX}
 `;
 
         setIsGenerating(true)
-        setGeneratedCode("")
+        if (!previousCode) {
+          setGeneratedCode("")
+        }
         setThinkingOutput("")
         setIsThinking(false)
         setGenerationComplete(false)
@@ -118,7 +124,8 @@ ${DESIGN_EXCELLENCE_SUFFIX}
                     customSystemPrompt: finalCustomSystemPrompt,
                     customCredentials,
                     isSearchEnabled,
-                    attachedFiles: processedFiles
+                    attachedFiles: processedFiles,
+                    previousCode
                 }),
             })
 

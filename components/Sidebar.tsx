@@ -60,25 +60,28 @@ export function Sidebar({
   return (
     <div 
       className={cn(
-        "flex flex-col h-full bg-slate-900 border-r border-slate-800 transition-all duration-300 ease-in-out",
+        "flex flex-col h-full bg-[#020617]/40 backdrop-blur-xl border-r border-white/5 transition-all duration-300 ease-in-out",
         isCollapsed ? "w-16" : "w-64"
       )}
     >
       {/* Header/Logo */}
       <div className={cn(
-        "p-4 flex items-center mb-4",
+        "p-6 flex items-center mb-4",
         isCollapsed ? "justify-center" : "justify-between"
       )}>
         {!isCollapsed && (
-          <div className="flex items-center gap-2 font-semibold text-white">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)]">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className="text-lg tracking-tight">Aiappsy WebCrafter</span>
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm font-bold tracking-tight text-white uppercase opacity-90">Web Crafter</span>
+              <span className="text-[10px] font-mono text-blue-400 font-bold tracking-[0.2em]">S T U D I O</span>
+            </div>
           </div>
         )}
         {isCollapsed && (
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.3)]">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
         )}
@@ -92,12 +95,13 @@ export function Sidebar({
               <button
                 onClick={onNewChat}
                 className={cn(
-                  "w-full flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-xl transition-all shadow-lg shadow-blue-900/20 active:scale-95",
+                  "w-full flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 font-medium py-2.5 rounded-xl transition-all hover:scale-[1.02] active:scale-95 group relative overflow-hidden",
                   isCollapsed ? "px-0 justify-center" : "px-4"
                 )}
               >
-                <PlusCircle className="w-5 h-5" />
-                {!isCollapsed && <span>New Chat</span>}
+                <PlusCircle className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
+                {!isCollapsed && <span className="text-sm">New Production Draft</span>}
+                <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
             </TooltipTrigger>
             <TooltipContent side="right">Start Fresh</TooltipContent>
@@ -106,7 +110,7 @@ export function Sidebar({
       </div>
 
       {/* Navigation Items */}
-      <nav className="flex-1 px-2 space-y-2">
+      <nav className="flex-1 px-3 space-y-1.5">
         <TooltipProvider delayDuration={0}>
           {NAV_ITEMS.map((item) => (
             <Tooltip key={item.id}>
@@ -114,18 +118,21 @@ export function Sidebar({
                 <button
                   onClick={() => onTabChange(item.id as SidebarTab)}
                   className={cn(
-                    "w-full flex items-center rounded-lg px-3 py-2 transition-colors",
+                    "w-full flex items-center rounded-xl px-3 py-2.5 transition-all relative group",
                     activeTab === item.id 
-                      ? "bg-blue-600/10 text-blue-400 group" 
-                      : "text-slate-400 hover:bg-slate-800 hover:text-slate-200",
+                      ? "bg-blue-600/10 text-white" 
+                      : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
                     isCollapsed ? "justify-center" : "gap-3"
                   )}
                 >
                   <item.icon className={cn(
-                    "w-5 h-5 shrink-0",
-                    activeTab === item.id ? "text-blue-400" : "text-slate-400 transition-colors"
+                    "w-4 h-4 shrink-0 transition-transform group-hover:scale-110",
+                    activeTab === item.id ? "text-blue-400" : "text-slate-400"
                   )} />
-                  {!isCollapsed && <span className="font-medium text-sm">{item.label}</span>}
+                  {!isCollapsed && <span className="text-sm font-medium tracking-wide">{item.label}</span>}
+                  {activeTab === item.id && (
+                    <div className="absolute left-[-12px] top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                  )}
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -137,31 +144,31 @@ export function Sidebar({
       </nav>
 
       {/* Footer / Help & User & Collapse Toggle */}
-      <div className="p-2 border-t border-slate-800 space-y-2">
+      <div className="p-3 border-t border-white/5 bg-black/20 space-y-1.5">
         <TooltipProvider delayDuration={0}>
           {user && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className={cn(
-                  "flex items-center gap-3 p-2 rounded-lg bg-slate-800/20 border border-slate-800/50 mb-2",
+                  "flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5 mb-2",
                   isCollapsed ? "justify-center" : "px-3"
                 )}>
-                  <Avatar className="w-8 h-8 border border-slate-700">
+                  <Avatar className="w-7 h-7 border border-white/10 ring-1 ring-blue-500/20">
                     <AvatarImage src={user.photoURL || undefined} />
-                    <AvatarFallback className="bg-blue-600/20 text-blue-400 text-[10px]">
+                    <AvatarFallback className="bg-blue-600/20 text-blue-400 text-[10px] font-bold">
                       {user.displayName?.charAt(0) || <UserIcon className="w-3 h-3" />}
                     </AvatarFallback>
                   </Avatar>
                   {!isCollapsed && (
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-slate-200 truncate">{user.displayName}</p>
-                      <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
+                      <p className="text-xs font-semibold text-slate-100 truncate tracking-tight">{user.displayName}</p>
+                      <p className="text-[10px] text-slate-500 truncate font-mono uppercase tracking-tighter">Pro Studio Plan</p>
                     </div>
                   )}
                 </div>
               </TooltipTrigger>
               <TooltipContent side="right">
-                Signed in as {user.displayName}
+                Studio Authorized
               </TooltipContent>
             </Tooltip>
           )}
@@ -169,32 +176,14 @@ export function Sidebar({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={onToggleSettings}
-                className={cn(
-                  "w-full flex items-center rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors",
-                  isCollapsed ? "justify-center" : "gap-3"
-                )}
-              >
-                <Settings className="w-5 h-5 shrink-0" />
-                {!isCollapsed && <span className="font-medium text-sm">Model Settings</span>}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              Configure Model
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
                 onClick={onOpenHelp}
                 className={cn(
-                  "w-full flex items-center rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors",
+                  "w-full flex items-center rounded-xl px-3 py-2 text-slate-400 hover:bg-white/5 hover:text-white transition-all",
                   isCollapsed ? "justify-center" : "gap-3"
                 )}
               >
-                <HelpCircle className="w-5 h-5 shrink-0" />
-                {!isCollapsed && <span className="font-medium text-sm">Help & Manual</span>}
+                <HelpCircle className="w-4 h-4 shrink-0 transition-transform group-hover:rotate-12" />
+                {!isCollapsed && <span className="text-[13px] font-medium tracking-tight">Studio Guide</span>}
               </button>
             </TooltipTrigger>
             <TooltipContent side="right">
@@ -208,12 +197,12 @@ export function Sidebar({
                 <button
                   onClick={() => logout()}
                    className={cn(
-                    "w-full flex items-center rounded-lg px-3 py-2 text-red-400/70 hover:bg-red-950/20 hover:text-red-400 transition-colors",
+                    "w-full flex items-center rounded-xl px-3 py-2 text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition-all",
                     isCollapsed ? "justify-center" : "gap-3"
                   )}
                 >
-                  <LogOut className="w-5 h-5 shrink-0" />
-                  {!isCollapsed && <span className="font-medium text-sm">Sign Out</span>}
+                  <LogOut className="w-4 h-4 shrink-0" />
+                  {!isCollapsed && <span className="text-[13px] font-medium tracking-tight">Eject Session</span>}
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -225,12 +214,12 @@ export function Sidebar({
 
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="w-full flex items-center justify-center rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors"
+          className="w-full flex items-center justify-center rounded-xl py-2 mt-1 text-slate-500 hover:text-slate-300 transition-all bg-white/[0.02] border border-white/5"
         >
-          {isCollapsed ? <ChevronRight className="w-5 h-5" /> : (
-            <div className="flex items-center gap-3 w-full px-1">
-              <ChevronLeft className="w-5 h-5" />
-              <span className="text-sm font-medium italic">Collapse sidebar</span>
+          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : (
+            <div className="flex items-center gap-2 w-full px-3">
+              <ChevronLeft className="w-4 h-4" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.1em] opacity-40">Compact UI</span>
             </div>
           )}
         </button>
