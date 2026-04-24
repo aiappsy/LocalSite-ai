@@ -99,8 +99,8 @@ export function PromptSection({
       )}
 
       <div className="relative group transition-all duration-300 flex-1 flex flex-col">
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition duration-500"></div>
-        <div className="relative bg-[#171719] border border-white/5 rounded-xl overflow-hidden shadow-2xl flex flex-col flex-1">
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600/30 to-purple-600/30 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition duration-500"></div>
+        <div className="relative bg-[#0e0e11] border border-white/10 rounded-xl overflow-hidden shadow-2xl flex flex-col flex-1 ring-1 ring-white/5">
           <div className="flex items-center gap-2 px-3 py-1.5 border-b border-white/5 bg-white/[0.02]">
             <TooltipProvider>
               <Tooltip>
@@ -200,7 +200,6 @@ export function PromptSection({
                     {isGenerating ? "Processing Draft" : "Architecture Ready"}
                 </span>
             </div>
-            {previousPrompt && (
                 <div className="hidden md:flex items-center gap-2 border-l border-white/5 pl-4 overflow-hidden max-w-[400px]">
                     <span className="text-[9px] font-mono text-slate-600 uppercase">Last:</span>
                     <span className="text-[10px] text-slate-400 truncate italic">"{previousPrompt}"</span>

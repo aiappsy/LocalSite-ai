@@ -279,7 +279,7 @@ export default function Home() {
       <ResizablePanelGroup direction="horizontal" className="h-full items-stretch">
         {/* PANE 1: Left Navigation Sidebar */}
         <ResizablePanel 
-          defaultSize={isSidebarCollapsed ? 4 : 14} 
+          defaultSize={5} 
           minSize={4} 
           maxSize={18}
           collapsible={true}

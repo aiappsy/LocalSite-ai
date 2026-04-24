@@ -87,6 +87,8 @@ interface PreviewPanelProps {
     onDeploy?: () => void
     isLiveEditEnabled: boolean
     setIsLiveEditEnabled: (value: boolean) => void
+    isMaximized: boolean
+    setIsMaximized: (value: boolean) => void
 }
 
 // -----------------------------------------------------------------------------
@@ -251,10 +253,10 @@ export function PreviewPanel({
     previewContent,
     onDeploy,
     isLiveEditEnabled,
-    setIsLiveEditEnabled
+    setIsLiveEditEnabled,
+    isMaximized,
+    setIsMaximized
 }: PreviewPanelProps) {
-    const [isMaximized, setIsMaximized] = useState(false);
-
     // -----------------------------------------------------------------------------
     // Helper: Open in New Tab
     // -----------------------------------------------------------------------------

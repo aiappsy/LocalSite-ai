@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { debounce } from "lodash"
 import { Badge } from "@/components/ui/badge"
-import { Download, RefreshCw, Terminal } from "lucide-react"
+import { RefreshCw, Terminal, Maximize2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { ThinkingIndicator } from "@/components/thinking-indicator"
 import { SystemInstructions } from "@/components/SystemInstructions"
 import { Button } from "@/components/ui/button"
@@ -69,7 +70,8 @@ export function GenerationView({
 }: GenerationViewProps) {
   const [viewportSize, setViewportSize] = useState<"desktop" | "tablet" | "mobile">("desktop")
   const [copySuccess, setCopySuccess] = useState(false)
-  const [activeTab, setActiveTab] = useState<"code" | "preview">("code")
+  const [viewMode, setViewMode] = useState<"split" | "code" | "preview">("split")
+  const [isMaximized, setIsMaximized] = useState(false)
   const [isEditable, setIsEditable] = useState(false)
   const [editedCode, setEditedCode] = useState(generatedCode)
   const [originalCode, setOriginalCode] = useState(generatedCode)
@@ -284,51 +286,77 @@ export function GenerationView({
 
       {/* Main Content - Side-by-Side Studio View and Bottom Prompt */}
       <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex items-center gap-1 border-b border-white/5 bg-[#171719] px-2 h-9">
+            <button 
+                onClick={() => setViewMode("split")}
+                className={cn("px-3 h-6 rounded flex items-center gap-1.5 text-[10px] uppercase font-bold transition-all", 
+                viewMode === "split" ? "bg-blue-600 text-white" : "text-slate-500 hover:text-slate-300 hover:bg-white/5")}
+            >
+                Studio
+            </button>
+            <button 
+                onClick={() => setViewMode("code")}
+                className={cn("px-3 h-6 rounded flex items-center gap-1.5 text-[10px] uppercase font-bold transition-all", 
+                viewMode === "code" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300 hover:bg-white/5")}
+            >
+                Code
+            </button>
+            <button 
+                onClick={() => setViewMode("preview")}
+                className={cn("px-3 h-6 rounded flex items-center gap-1.5 text-[10px] uppercase font-bold transition-all", 
+                viewMode === "preview" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300 hover:bg-white/5")}
+            >
+                Preview
+            </button>
+
+            <button 
+                onClick={() => setIsMaximized(true)}
+                className="ml-auto mr-2 px-3 h-6 rounded flex items-center gap-1.5 text-[10px] uppercase font-bold text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 transition-all active:scale-95"
+            >
+                <Maximize2 className="w-3 h-3" />
+                Full Screen
+            </button>
+        </div>
+
         <ResizablePanelGroup direction="vertical" className="h-full">
-          {/* TOP AREA: Code & Preview Side-by-Side */}
+          {/* TOP AREA: Code & Preview */}
           <ResizablePanel defaultSize={75} minSize={50}>
             <ResizablePanelGroup direction="horizontal" className="h-full">
               {/* CODE EDITOR PANEL */}
-              <ResizablePanel defaultSize={50} minSize={30} className="relative flex flex-col bg-[#131314]">
-                <div className="flex items-center justify-between px-3 h-8 border-b border-white/5 bg-[#171719]">
-                  <div className="flex items-center gap-2">
-                    <Terminal className="w-3 h-3 text-blue-500" />
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">Editor</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {generationComplete && (
-                      <Badge variant="outline" className="h-4 text-[9px] font-mono border-emerald-500/20 text-emerald-400 bg-emerald-500/10 px-1">
-                        SYNC
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex-1 overflow-hidden relative">
-                  <CodePanel {...codePanelProps} />
-                </div>
-              </ResizablePanel>
+              {(viewMode === "split" || viewMode === "code") && (
+                <ResizablePanel defaultSize={viewMode === "code" ? 100 : 50} minSize={viewMode === "code" ? 100 : 30} className="relative flex flex-col bg-[#131314]">
+                    <div className="flex items-center justify-between px-3 h-7 border-b border-white/5 bg-[#0e0e11]/50">
+                        <div className="flex items-center gap-2">
+                            <Terminal className="w-3 h-3 text-blue-500" />
+                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">Editor</span>
+                        </div>
+                    </div>
+                    <div className="flex-1 overflow-hidden relative">
+                        <CodePanel {...codePanelProps} />
+                    </div>
+                </ResizablePanel>
+              )}
 
-              <ResizableHandle withHandle className="bg-white/5 w-1 hover:bg-blue-500/30 transition-colors" />
+              {viewMode === "split" && <ResizableHandle withHandle className="bg-white/5 w-1 hover:bg-blue-500/30 transition-colors" />}
 
               {/* PREVIEW PANEL */}
-              <ResizablePanel defaultSize={50} minSize={30} className="bg-black/20">
-                <div className="flex items-center justify-between px-3 h-8 border-b border-white/5 bg-[#171719]">
-                  <div className="flex items-center gap-2">
-                    <RefreshCw className={`w-3 h-3 text-slate-500 ${isGenerating ? 'animate-spin' : ''}`} />
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">Preview</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" className="h-5 text-[9px] gap-1 px-1.5 border border-white/5 font-mono uppercase text-slate-500 hover:text-white" onClick={refreshPreview}>
-                      <RefreshCw className="w-2.5 h-2.5" />
-                      Reload
-                    </Button>
-                  </div>
-                </div>
-                <div className="h-full w-full overflow-hidden">
-                  <PreviewPanel {...previewPanelProps} />
-                </div>
-              </ResizablePanel>
+              {(viewMode === "split" || viewMode === "preview") && (
+                <ResizablePanel defaultSize={viewMode === "preview" ? 100 : 50} minSize={viewMode === "preview" ? 100 : 30} className="bg-black/20">
+                    <div className="flex items-center justify-between px-3 h-7 border-b border-white/5 bg-[#0e0e11]/50">
+                        <div className="flex items-center gap-2">
+                            <RefreshCw className={`w-3 h-3 text-slate-500 ${isGenerating ? 'animate-spin' : ''}`} />
+                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">Preview</span>
+                        </div>
+                    </div>
+                    <div className="h-full w-full overflow-hidden">
+                        <PreviewPanel 
+                            {...previewPanelProps} 
+                            isMaximized={isMaximized}
+                            setIsMaximized={setIsMaximized}
+                        />
+                    </div>
+                </ResizablePanel>
+              )}
             </ResizablePanelGroup>
           </ResizablePanel>
 
@@ -369,6 +397,7 @@ export function GenerationView({
               Do you want to save your changes before switching to read-only mode?
             </DialogDescription>
           </DialogHeader>
+
           <DialogFooter className="mt-4">
             <Button
               variant="outline"
