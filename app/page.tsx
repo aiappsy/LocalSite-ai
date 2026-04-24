@@ -34,6 +34,8 @@ import { db } from "@/lib/firebase/config"
 import { doc, getDoc, setDoc } from "firebase/firestore"
 import { debounce } from "lodash"
 import { Toaster, toast } from "sonner"
+import { StudioHeader } from "@/components/StudioHeader"
+import { Badge } from "@/components/ui/badge"
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth()
