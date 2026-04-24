@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/resizable"
 
 import { CodePanel, PreviewPanel } from "@/components/generation-panels"
+import { PromptSection } from "@/components/PromptSection"
 
 interface GenerationViewProps {
   prompt: string
@@ -268,64 +269,95 @@ export function GenerationView({
     <div className="h-full bg-transparent text-white flex flex-col overflow-hidden">
       {/* Reasoning/Thinking Indicator if active */}
       {thinkingOutput && (
-        <div className="bg-blue-600/5 border-b border-white/5 p-1.5 flex items-center justify-center relative overflow-hidden group">
+        <div className="bg-[#1e1e21]/80 backdrop-blur-md border-b border-white/5 py-1 flex items-center justify-center relative overflow-hidden group">
            <div className="absolute inset-0 bg-blue-500/5 animate-pulse" />
            <ThinkingIndicator
               thinkingOutput={thinkingOutput}
               isThinking={isThinking}
               position="top-right"
             />
-            <span className="text-[10px] font-mono text-blue-400/60 uppercase tracking-[0.2em] ml-2 z-10">
-              Architectural Reasoning Active
+            <span className="text-[10px] font-mono text-blue-400/80 uppercase tracking-[0.3em] font-bold ml-2 z-10">
+              Thinking
             </span>
         </div>
       )}
 
-      {/* Tab-Navigation - Studio Style */}
-      <div className="flex px-4 items-center bg-slate-950/20 backdrop-blur-md border-b border-white/5 h-10 sticky top-0 z-20">
-        <div className="flex gap-1 h-full items-center">
-          <button
-            className={`px-4 py-1.5 text-[11px] font-bold tracking-widest transition-all rounded-lg ${activeTab === "code" 
-              ? "text-blue-200 bg-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.15)]" 
-              : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
-            }`}
-            onClick={() => setActiveTab("code")}
-          >
-            CODE
-          </button>
-          <button
-            className={`px-4 py-1.5 text-[11px] font-bold tracking-widest transition-all rounded-lg ${activeTab === "preview" 
-              ? "text-blue-200 bg-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.15)]" 
-              : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
-            }`}
-            onClick={() => setActiveTab("preview")}
-          >
-            PREVIEW
-          </button>
-        </div>
-        
-        <div className="flex-1" />
-        
-        <div className="flex items-center gap-2">
-          {generationComplete && (
-            <Badge variant="outline" className="h-6 text-[10px] font-mono border-white/10 text-emerald-400 bg-emerald-500/5">
-              COMPILED
-            </Badge>
-          )}
-        </div>
-      </div>
+      {/* Main Content - Side-by-Side Studio View and Bottom Prompt */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <ResizablePanelGroup direction="vertical" className="h-full">
+          {/* TOP AREA: Code & Preview Side-by-Side */}
+          <ResizablePanel defaultSize={75} minSize={50}>
+            <ResizablePanelGroup direction="horizontal" className="h-full">
+              {/* CODE EDITOR PANEL */}
+              <ResizablePanel defaultSize={50} minSize={30} className="relative flex flex-col bg-[#131314]">
+                <div className="flex items-center justify-between px-3 h-8 border-b border-white/5 bg-[#171719]">
+                  <div className="flex items-center gap-2">
+                    <Terminal className="w-3 h-3 text-blue-500" />
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">Editor</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {generationComplete && (
+                      <Badge variant="outline" className="h-4 text-[9px] font-mono border-emerald-500/20 text-emerald-400 bg-emerald-500/10 px-1">
+                        SYNC
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex-1 overflow-hidden relative">
+                  <CodePanel {...codePanelProps} />
+                </div>
+              </ResizablePanel>
 
-      {/* Main Content - Unified Tabbed View */}
-      <div className="flex-1 flex overflow-hidden relative">
-        {activeTab === "code" ? (
-          <div className="w-full h-full animate-in fade-in zoom-in-95 duration-500">
-            <CodePanel {...codePanelProps} />
-          </div>
-        ) : (
-          <div className="w-full h-full animate-in fade-in zoom-in-95 duration-500">
-            <PreviewPanel {...previewPanelProps} />
-          </div>
-        )}
+              <ResizableHandle withHandle className="bg-white/5 w-1 hover:bg-blue-500/30 transition-colors" />
+
+              {/* PREVIEW PANEL */}
+              <ResizablePanel defaultSize={50} minSize={30} className="bg-black/20">
+                <div className="flex items-center justify-between px-3 h-8 border-b border-white/5 bg-[#171719]">
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className={`w-3 h-3 text-slate-500 ${isGenerating ? 'animate-spin' : ''}`} />
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">Preview</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" className="h-5 text-[9px] gap-1 px-1.5 border border-white/5 font-mono uppercase text-slate-500 hover:text-white" onClick={refreshPreview}>
+                      <RefreshCw className="w-2.5 h-2.5" />
+                      Reload
+                    </Button>
+                  </div>
+                </div>
+                <div className="h-full w-full overflow-hidden">
+                  <PreviewPanel {...previewPanelProps} />
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle className="bg-white/5 h-1 hover:bg-blue-500/30 transition-colors" />
+
+          {/* BOTTOM AREA: Prompt Input (spanning full width) */}
+          <ResizablePanel defaultSize={25} minSize={15} className="bg-[#131314] border-t border-white/5">
+            <div className="h-full flex flex-col p-4 max-w-5xl mx-auto w-full">
+               <PromptSection 
+                 newPrompt={newPrompt}
+                 setNewPrompt={setNewPrompt}
+                 handleSendNewPrompt={handleSendNewPrompt}
+                 isGenerating={isGenerating}
+                 isSearchEnabled={isSearchEnabled}
+                 setIsSearchEnabled={setIsSearchEnabled}
+                 attachedFiles={attachedFiles}
+                 setAttachedFiles={setAttachedFiles}
+                 selectedPersona={selectedPersona}
+                 onPersonaChange={onPersonaChange}
+                 previousPrompt={prompt}
+                 generationComplete={generationComplete}
+                 editedCode={editedCode}
+                 generatedCode={generatedCode}
+                 isEditable={isEditable}
+                 model={model}
+               />
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
 
       {/* Speichern-Dialog */}

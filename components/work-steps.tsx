@@ -8,6 +8,7 @@ interface WorkStepsProps {
   isGenerating: boolean
   generationComplete: boolean
   generatedCode?: string
+  compact?: boolean
 }
 
 interface Step {
@@ -17,7 +18,7 @@ interface Step {
   completed: boolean
 }
 
-export function WorkSteps({ isGenerating, generationComplete, generatedCode = "" }: WorkStepsProps) {
+export function WorkSteps({ isGenerating, generationComplete, generatedCode = "", compact = false }: WorkStepsProps) {
   const [steps, setSteps] = useState<Step[]>([
     {
       id: "init",
@@ -116,6 +117,30 @@ export function WorkSteps({ isGenerating, generationComplete, generatedCode = ""
       setSteps(completedSteps);
     }
   }, [generatedCode, generationComplete]);
+
+  if (compact) {
+    if (generationComplete) {
+      return (
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+          <CheckCircle className="w-2.5 h-2.5 text-emerald-500" />
+          <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider">Project Stable</span>
+        </div>
+      )
+    }
+    
+    if (!isGenerating) return null
+
+    const currentStep = steps[currentStepIndex] || steps[steps.length - 1]
+    
+    return (
+      <div className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-blue-500/5 border border-white/5">
+        <Loader2 className="w-2.5 h-2.5 text-blue-400 animate-spin" />
+        <span className="text-[9px] font-bold text-blue-300 uppercase tracking-widest animate-pulse">
+            {currentStep.label}
+        </span>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-1.5 h-full overflow-y-auto">
